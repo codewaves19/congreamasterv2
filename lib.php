@@ -95,7 +95,7 @@ function congrea_add_instance($congrea) {
     }
     $vclass = $DB->insert_record('congrea', $congrea);
     $congrea->id = $vclass;
-    mod_congrea_update_calendar($congrea);
+    //mod_congrea_update_calendar($congrea);
     return $vclass;
 }
 
@@ -151,7 +151,7 @@ function congrea_update_instance($congrea, $mform = null) {
         $congrea->showattendeerecordingstatus = 1;
     }
     $status = $DB->update_record('congrea', $congrea);
-    mod_congrea_update_calendar($congrea);
+    //mod_congrea_update_calendar($congrea);
     return $status;
 }
 
@@ -200,6 +200,7 @@ function congrea_delete_instance($id) {
         $DB->delete_records('congrea_quiz', array('congreaid' => $congrea->id));
     }
     $DB->delete_records('congrea', array('id' => $congrea->id));
+    $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id));
     return true;
 }
 

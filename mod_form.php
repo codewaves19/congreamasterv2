@@ -63,14 +63,14 @@ class mod_congrea_mod_form extends moodleform_mod {
         }
         // Adding the rest of congrea settings
         // Adding list of teachers.
-        $teacheroptions = congrea_course_teacher_list();
-        if (empty($teacheroptions)) {
-            $teacheroptions = "";
-        } else {
-            $teacheroptions[0] = 'Select';
-        }
-        $mform->addElement('select', 'moderatorid', get_string('selectteacher', 'congrea'), $teacheroptions);
-        $mform->addHelpButton('moderatorid', 'selectteacher', 'congrea');
+        // $teacheroptions = congrea_course_teacher_list();
+        // if (empty($teacheroptions)) {
+        //     $teacheroptions = "";
+        // } else {
+        //     $teacheroptions[0] = 'Select';
+        // }
+        // $mform->addElement('select', 'moderatorid', get_string('selectteacher', 'congrea'), $teacheroptions);
+        // $mform->addHelpButton('moderatorid', 'selectteacher', 'congrea');
         if (get_config('mod_congrea', 'allowoverride')) { // If admin allowoverride is enabled then all settings is show.
             // congrea General Settings.
             $mform->addElement('header', 'general', get_string('studentm', 'congrea'));
@@ -207,12 +207,12 @@ class mod_congrea_mod_form extends moodleform_mod {
             }
             $mform->disabledIf('trimrecordings', 'enablerecording', 'notchecked');
         }
-        // Schedule fo session.
-        $mform->addElement('header', 'general', get_string('sessionsschedule', 'congrea'));
-        $mform->addElement('date_time_selector', 'opentime', get_string('opentime', 'congrea'));
-        $mform->addRule('opentime', null, 'required', null, 'client');
-        $mform->addElement('date_time_selector', 'closetime', get_string('closetime', 'congrea'));
-        $mform->addRule('closetime', null, 'required', null, 'client');
+        // Schedule for session.
+        // $mform->addElement('header', 'general', get_string('sessionsschedule', 'congrea'));
+        // $mform->addElement('date_time_selector', 'opentime', get_string('opentime', 'congrea'));
+        // $mform->addRule('opentime', null, 'required', null, 'client');
+        // $mform->addElement('date_time_selector', 'closetime', get_string('closetime', 'congrea'));
+        // $mform->addRule('closetime', null, 'required', null, 'client');
         $this->standard_coursemodule_elements();
         // Add standard buttons, common to all modules.
         $this->add_action_buttons();
@@ -225,21 +225,21 @@ class mod_congrea_mod_form extends moodleform_mod {
      * @param array $files not used
      * @return array errors
      */
-    public function validation($data, $files) {
-        $errors = parent::validation($data, $files);
-        // Check open and close times are consistent.
-        if ($data['opentime'] != 0 && $data['closetime'] != 0 &&
-                $data['closetime'] < $data['opentime']) {
-            $errors['closetime'] = get_string('closebeforeopen', 'congrea');
-        }
-        if ($data['opentime'] != 0 && $data['closetime'] == 0) {
-            $errors['closetime'] = get_string('closenotset', 'congrea');
-        }
-        if ($data['opentime'] != 0 && $data['closetime'] != 0 &&
-                $data['closetime'] == $data['opentime']) {
-            $errors['closetime'] = get_string('closesameopen', 'congrea');
-        }
-        return $errors;
-    }
+    // public function validation($data, $files) {
+    //     $errors = parent::validation($data, $files);
+    //     // Check open and close times are consistent.
+    //     if ($data['opentime'] != 0 && $data['closetime'] != 0 &&
+    //             $data['closetime'] < $data['opentime']) {
+    //         $errors['closetime'] = get_string('closebeforeopen', 'congrea');
+    //     }
+    //     if ($data['opentime'] != 0 && $data['closetime'] == 0) {
+    //         $errors['closetime'] = get_string('closenotset', 'congrea');
+    //     }
+    //     if ($data['opentime'] != 0 && $data['closetime'] != 0 &&
+    //             $data['closetime'] == $data['opentime']) {
+    //         $errors['closetime'] = get_string('closesameopen', 'congrea');
+    //     }
+    //     return $errors;
+    // }
 
 }
