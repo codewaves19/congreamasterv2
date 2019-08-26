@@ -61,7 +61,11 @@ if ($mform->is_cancelled()) {
     $data = new stdClass();
     $data->starttime = $fromform->fromsessiondate;
     $data->endtime = $fromform->tosessiondate;
+    //$delta_T = ($data->endtime - $data->starttime);
+    //$minutes = round(((($delta_T % 604800) % 86400) % 3600) / 60); 
+    //echo $starttime = date('H:i:s', $data->starttime); exit;
     $timeduration = round((abs($data->endtime - $data->starttime) / 60));
+    //$timeduration = $minutes;
     $data->timeduration = $timeduration;      
     if ($fromform->period == 0) { // If do not Repeat.
         $data->repeattype = 0;
@@ -85,6 +89,13 @@ if ($mform->is_cancelled()) {
     if(!$exist) {
         $sessionid = $DB->insert_record('congrea_sessions', $data); // insert record in congrea table.
         mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $fromform->tosessiondate, $timeduration);
+    } else if($edit) {
+        //echo '<pre>'; print_r($fromform); exit;
+        $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id)); // By this delete all repeat session.
+        $sessionid = $edit;
+        $data->id =  $edit;
+        $DB->update_record('congrea_sessions', $data);
+        mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $fromform->tosessiondate, $timeduration);
     }
     //mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $fromform->tosessiondate, $timeduration);
     if ($fromform->period > 0) { // Here need to calculate repeate dates.
@@ -96,6 +107,7 @@ if ($mform->is_cancelled()) {
             repeat_calendar($congrea, $eventid, $startdate, $sessionid, $timeduration);
         }
     }
+    //$OUTPUT->notification($returnurl, get_string('updated', '', $sessionname, 'notifysucess'));
 }
 // Output starts here.
 echo $OUTPUT->header();
@@ -110,6 +122,8 @@ $table->head = array('Start Date', 'Day', 'Teacher', 'Repeat Type', 'Session End
 $sessionlist = $DB->get_records('congrea_sessions', array('congreaid'=>$congrea->id));
 if (!empty($sessionlist)) {
     foreach ($sessionlist as $list) {
+        //echo $starttime = date('H:i:s', $list->starttime);
+        //echo $endtime =  date('H:i:s', $list->endtime);
         $row = array();
         $row[] = userdate($list->starttime);
         //$row[] = $list->additional;
@@ -142,16 +156,22 @@ if (!empty($sessionlist)) {
 }
 if ($edit) {
     $list = $DB->get_records('congrea_sessions', array('id' => $edit));
+    $days = array();
     foreach($list as $formdata) {
         $data = new stdClass;
         $data->fromsessiondate = $formdata->starttime;
         $data->tosessiondate = $formdata->endtime;
         $data->period = $formdata->repeattype;
-       // $data->sessionenddate = $formdata->repeatendtime;
+        $data->moderatorid = $formdata->teacherid;
+        $dayname = (explode(", ", $formdata->additional));
+        foreach($dayname as $d) {
+            $key = trim($d, '"');
+            $days[$key] = 1;
+        }
+        $data->days = $days;
         $data->moderatorid = $formdata->teacherid;
     }
     $mform->set_data($data);
-    //$mform->display();
 }
 $tablestatus= $DB->get_field('congrea_sessions', 'congreaid', array('congreaid' => $congrea->id));
 if(empty($tablestatus) || $edit) {

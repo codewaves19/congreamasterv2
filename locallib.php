@@ -848,3 +848,10 @@ function congrea_print_tabs($currenttab, $context, $cm, $congrea)
     // Print out the tabs and continue!
     echo $OUTPUT->tabtree($row, $currenttab);
 }
+
+function array_key_first(array $arr) {
+    foreach($arr as $key => $unused) {
+        return $key;
+    }
+    return NULL;
+}
