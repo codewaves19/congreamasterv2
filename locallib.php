@@ -855,3 +855,283 @@ function array_key_first(array $arr) {
     }
     return NULL;
 }
+
+function mapper($data) {
+    $S = 'S';
+    $SS = 'SS';
+    $NN = 'NN';
+    $NS = 'NS';
+    $BS = 'BS';
+    $BB = 'BB';
+    $N = 'N';
+    $BOOL = 'BOOL';
+    $NULL = 'NULL';
+    $M = 'M';
+    $L = 'L';
+    if (is_object($data) || is_array($data)) {
+        //echo '<pre>'; print_r($data); exit;
+        if(is_object($data)) {
+        $array = get_object_vars($data);
+        $keys = array_keys($array);
+        } else {
+            $keys = array_keys($data);
+        }
+        //$array = get_object_vars($data);
+        //$keys = array_keys($array);
+      while (count($keys)) {
+        $key = array_shift($keys);
+        //echo $key; exit;
+        //echo '<pre>'; print_r($data); exit;
+        if(is_object($data)) {
+            $types = $data->$key;
+        } else {
+            $types = $data[$key];
+        }
+        //$types = $data->$key;
+        //echo '<pre>'; print_r($types); exit;
+        //echo $types; exit;
+        // if($types->$S) {
+        //     echo 'ravi'; exit;
+        // }
+        // if(is_object($types)) {
+        //     echo 'ravi'; exit;
+        // }
+        //echo '<pre>'; print_r($types); exit;
+        if (is_object($types) && !empty($types->$S)||is_array($types)) {
+            // if(is_object($types)) {
+            //     $data->$key = $types->$S;
+            // } else {
+            //     $data->$key = $types[$S];
+            // }
+            $data->$key = $types->$S;
+
+        //echo '<pre>'; print_r($data->$key); exit;
+
+        } else if (is_object($types) && !empty($types->$N) || is_array($types)) {               
+            // if(is_object($types)) {
+            //     $data->$key = floatval($types->$N);
+            // } else {
+            //     $data->$key = floatval($types[$N]);
+            // }
+            //$data->$key = floatval($types->$N);
+            $data->$key = $types->$N;
+        } else if (is_object($types) && !empty($types->$BOOL) || is_array($types)) {
+            // if(is_object($types)) {
+            //     $data->$key = $types->$BOOL;
+            // } else {
+            //     $data->$key = $types[$BOOL];
+            // } 
+            $data->$key = $types->$BOOL;
+        } else if (is_object($types) && !empty($types->$NULL) || is_array($types)) {
+            // if(is_object($types)) {
+            //     $data->$key = NULL;
+            // } else {
+            //     $data->$key = NULL;
+            // } 
+            $data->$key = NULL;
+        } else if (is_object($types) && !empty($types->$M) || is_array($data)) {
+            if(is_object($data)) {
+                $data->$key = mapper($types->$M);
+            } else {
+                $data[$key] = mapper($types->$M);
+            }  
+            //$data->$key =  mapper($types->$M);
+            //$data->$key =  mapper($types->$M);
+             //echo 'ravi';
+             //secho '<pre>'; print_r($data->$key); 
+             //echo 'M'.$data->$key;
+        } else if (is_object($types) && !empty($types->$L) || is_array($types)) {
+            // if(is_object($types)) {
+            //     $data->$key = mapper($types->$L);
+            // } else {
+            //     $data->$key = mapper($types[$L]);
+            // }  
+            $data->$key = mapper($types->$L);
+             //echo 'L'.$data->$key;
+        } else if (is_object($types) && !empty($types->$SS) || is_array($types)) {
+            // if(is_object($types)) {
+            //     $data->$key = $types->$SS;
+            // } else {
+            //     $data->$key = $types[$SS];
+            // }  
+            $data->$key = $types->$SS;
+        } else if (is_object($types) && !empty($types->$NN) || is_array($types)) {
+            // if(is_object($types)) {
+            //     $data->$key = $types->$NN;
+            // } else {
+            //     $data->$key = $types[$NN];
+            // }  
+            $data->$key = $types->$NN;
+        } else if (is_object($types) && !empty($types->$$BB) || is_array($types)) {
+            // if(is_object($types)) {
+            //     $data->$key = $types->$BB;
+            // } else {
+            //     $data->$key = $types[$BB];
+            // } 
+            $data->$key = $types->$BB;
+        } else if (is_object($types) && !empty($types->$NS) || is_array($types)) {
+            // if(is_object($types)) {
+            //     $data->$key = $types->$NS;
+            // } else {
+            //     $data->$key = $types[$NS];
+            // } 
+            $data->$key = $types->$NS;
+        } else if (is_object($types) && !empty($types->$BS)|| is_array($types)) {
+            // if(is_object($types)) {
+            //     $data->$key = $types->$BS;
+            // } else {
+            //     $data->$key = $types[$BS];
+            // } 
+            $data->$key = $types->$BS;
+        }
+      }
+    }
+    return $data;
+    // function is_object($value) {
+    //   return  $value === 'object' && $value !== null;
+    // }
+  }
+//   function mapper($data) {  
+//     $S = 'S';
+//     $SS = 'SS';
+//     $NN = 'NN';
+//     $NS = 'NS';
+//     $BS = 'BS';
+//     $BB = 'BB';
+//     $N = 'N';
+//     $BOOL = 'BOOL';
+//     $NULL = 'NULL';
+//     $M = 'M';
+//     $L = 'L';
+//     if (is_object($data)) {
+//         //echo '<pre>'; print_r($data); exit;
+//         $array = get_object_vars($data);
+//         $keys = array_keys($array);
+//       while (count($keys)) {
+//         $key = array_shift($keys);
+//         //echo $key; exit;
+//         //echo '<pre>'; print_r($data); exit;
+//         $types = $data->$key;
+//         //echo '<pre>'; print_r($types); exit;
+//         //echo $types; exit;
+//         // if($types->$S) {
+//         //     echo 'ravi'; exit;
+//         // }
+//         //echo '<pre>'; print_r($types); exit;
+//         if (is_object($types) && !empty($types->$S)) {
+//           $data->$key = $types->$S;
+
+//         //   echo '<pre>'; print_r($data->$key); exit;
+
+//         } else if (is_object($types) && !empty($types->N)) {
+//            $data->$key = $types->N;
+//         } else if (is_object($types) && !empty($types->BOOL)) {
+//              $data->$key = $types->BOOL;
+//         } else if (is_object($types) && !empty($types->NULL)) {
+//              $data->$key = NULL;
+//         } else if (is_object($types) && !empty($types->M)) {
+//              $data->$key =  mapper($types->M);
+//              //echo 'ravi';
+//              //secho '<pre>'; print_r($data->$key); 
+//              //echo 'M'.$data->$key;
+//         } else if (is_object($types) && !empty($types->L)) {
+//              $data->$key = mapper($types->L);
+//              //echo 'L'.$data->$key;
+//         } else if (is_object($types) && !empty($types->SS)) {
+//              $data->$key = $types->SS;
+//         } else if (is_object($types) && !empty($types->NN)) {
+//              $data->$key = $types->NN;
+//         } else if (is_object($types) && !empty($types->$BB)) {
+//              $data->$key = $types-$BB;
+//         } else if (is_object($types) && !empty($types->NS)) {
+//              $data->$key = $types->NS;
+//         } else if (is_object($types) && !empty($types->BS)) {
+//              $data->$key = $types->BS;
+//         }
+//       }
+//     }
+//     return $data;
+//     // function is_object($value) {
+//     //   return  $value === 'object' && $value !== null;
+//     // }
+//   }
+function unmarshalItem(array $data, $mapAsObject = false)
+{
+    return unmarshalValue(['M' => $data], $mapAsObject);
+}
+
+function unmarshalValue(array $value, $mapAsObject = false)
+{
+    $type = key($value);
+    $value = $value[$type];
+    switch ($type) {
+        case 'S':
+        case 'BOOL':
+            return $value;
+        case 'NULL':
+            return null;
+        case 'N':
+            // if ($this->options['wrap_numbers']) {
+            // 	return new NumberValue($value);
+            // }
+            // Use type coercion to unmarshal numbers to int/float.
+            return $value + 0;
+        case 'M':
+            if ($mapAsObject) {
+                $data = new \stdClass;
+                foreach ($value as $k => $v) {
+                    $data->$k = unmarshalValue($v, $mapAsObject);
+                }
+                return $data;
+            }
+            // NOBREAK: Unmarshal M the same way as L, for arrays.
+        case 'L':
+            foreach ($value as $k => $v) {
+                $value[$k] = unmarshalValue($v, $mapAsObject);
+            }
+            return $value;
+        case 'B':
+            return new BinaryValue($value);
+        case 'SS':
+        case 'NS':
+        case 'BS':
+            foreach ($value as $k => $v) {
+                $value[$k] = unmarshalValue([$type[0] => $v]);
+            }
+            return new SetValue($value);
+    }
+    throw new \UnexpectedValueException("Unexpected type: {$type}.");
+}
+
+function recording_view($uid, $recordingattendance)
+    {
+        $sum = 0;
+        $datapercent = 0;
+        $recodingtime = null;
+        foreach ($recordingattendance['Items'] as $i) {
+            $rdata = unmarshalItem($i);
+            $userid = (int) filter_var($rdata['sk'], FILTER_SANITIZE_NUMBER_INT);
+            if ($uid == $userid) {
+                if (is_array($rdata['data'])) {
+                    if (empty($recodingtime)) {
+                        $recodingtime = $rdata['data']['rtt'];
+                    }
+                    foreach ($rdata['data'] as $data) {
+                        //echo '<pre>'; print_r($data); exit;
+                        if (is_array($data)) {
+                            foreach ($data as $key) {
+                                //echo '<pre>'; print_r($key); exit;
+                                foreach ($key as $k => $v) {
+                                    $viewdata = $v - $k;
+                                    $sum = $viewdata + $sum;
+                                }
+                            }
+                        }
+                    }
+                    $datapercent = (($sum * 5) / ($recodingtime / 1000)) * 100;
+                }
+                return $datapercent;
+            }
+        }
+    }
+       

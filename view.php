@@ -76,7 +76,7 @@ if ($repeat > 0) { // Repeat dates.
         $repeattimeend = strtotime($endtime);
     }
 }
-if(!$repeat) {
+if (!$repeat) {
     $sessionendtime = $endtime;
     $sessionstarttime = $starttime;
 } else {
@@ -360,37 +360,37 @@ if ($psession) {
     $joinbutton = false;
 }
 if ($sessionendtime > time() && $sessionstarttime <= time()) {
-        $murl = parse_url($CFG->wwwroot);
-        if ($murl['scheme'] == 'https') {
-            $sendmurl = $CFG->wwwroot;
-        } else {
-            $sendmurl = str_replace("http://", "https://", $CFG->wwwroot);
-        }
-        $form = congrea_online_server(
-            $url,
-            $authusername,
-            $authpassword,
-            $role,
-            $rid,
-            $room,
-            $upload,
-            $down,
-            $info,
-            $cgcolor,
-            $webapi,
-            $userpicturesrc,
-            $fromcms,
-            $licensekey,
-            $audiostatus,
-            $videostatus,
-            $recordingstatus,
-            $hexcode,
-            $joinbutton
-        );
-        echo $form;
+    $murl = parse_url($CFG->wwwroot);
+    if ($murl['scheme'] == 'https') {
+        $sendmurl = $CFG->wwwroot;
     } else {
-        // Congrea closed.
-        echo $OUTPUT->heading(get_string('sessionclosed', 'congrea'));
+        $sendmurl = str_replace("http://", "https://", $CFG->wwwroot);
+    }
+    $form = congrea_online_server(
+        $url,
+        $authusername,
+        $authpassword,
+        $role,
+        $rid,
+        $room,
+        $upload,
+        $down,
+        $info,
+        $cgcolor,
+        $webapi,
+        $userpicturesrc,
+        $fromcms,
+        $licensekey,
+        $audiostatus,
+        $videostatus,
+        $recordingstatus,
+        $hexcode,
+        $joinbutton
+    );
+    echo $form;
+} else {
+    // Congrea closed.
+    echo $OUTPUT->heading(get_string('sessionclosed', 'congrea'));
 }
 // Upload congrea recording.
 $postdata = json_encode(array('room' => $room));
@@ -490,7 +490,7 @@ if ($psession) {
 // Student Report according to session.
 if ($session) {
     $table = new html_table();
-    $table->head = array('Name', 'Start time', 'Exit time', 'Duration attended', 'Presence', 'Attendance');
+    $table->head = array('Name', 'Start time', 'Exit time', 'Duration attended', 'Presence', 'Recording view', 'Attendance');
     $table->colclasses = array('centeralign', 'centeralign');
     $table->attributes['class'] = 'admintable generaltable';
     $apiurl = 'https://api.congrea.net/t/analytics/attendance';
@@ -522,10 +522,14 @@ if ($session) {
                     $presence = '-';
                 }
             }
+            $apiurl2 = 'https://api.congrea.net/t/analytics/attendancerecording';
+            $recdata = attendence_curl_request($apiurl2, $session, $key, $authpassword, $authusername, $room); // TODO.
+            $recordingattendance = json_decode($recdata, true);
+            $recview = recording_view($sattendence->uid, $recordingattendance);
             $table->data[] = array(
                 $username, date('y-m-d h:i:s', $studentsstatus->starttime),
                 date('y-m-d h:i:s', $studentsstatus->endtime), $studentsstatus->totalspenttime . ' ' . 'minutes',
-                round($presence) . '%', '<p style="color:green;"><b>P</b></p>'
+                round($presence) . '%', $recview.'%', '<p style="color:green;"><b>P</b></p>'
             );
         }
         if (!empty($attendence)) {
@@ -541,7 +545,7 @@ if ($session) {
                 } else {
                     $username = get_string('nouser', 'mod_congrea');
                 }
-                $table->data[] = array($username, '-', '-', '-', '-', '<p style="color:red;"><b>A</b></p>');
+                $table->data[] = array($username, '-', '-', '-', '-', '-', '<p style="color:red;"><b>A</b></p>');
             }
         } else {
             echo get_string('absentuser', 'mod_congrea');
