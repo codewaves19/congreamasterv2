@@ -296,7 +296,6 @@ function xmldb_congrea_upgrade($oldversion) {
         $table->add_field('repeattype', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, 0, null, null);
         $table->add_field('additional', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, 0, null, null);
         $table->add_field('teacherid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, 0, null, null);
-        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, 0, null, null);
         $table->add_field('congreaid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, 0, null, null);
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
         if (!$dbman->table_exists($table)) {
