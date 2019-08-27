@@ -46,6 +46,14 @@ if ($id) {
     print_error('You must specify a course_module ID or an instance ID');
 }
 require_login($course, true, $cm);
+// $strStart = '2013-06-19 18:25'; 
+// $strEnd   = '2018-06-19 21:47'; 
+
+// $dteStart = new DateTime($strStart); 
+// $dteEnd   = new DateTime($strEnd); 
+// $dteDiff  = $dteStart->diff($dteEnd); 
+// print $dteDiff->format("%H:%I:%S");
+
 $context = context_module::instance($cm->id);
 // Print the page header.
 $PAGE->set_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => $sessionsettings));

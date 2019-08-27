@@ -451,7 +451,7 @@ if ($psession) {
         if (has_capability('mod/congrea:attendance', $context)) {
             $imageurl = "$CFG->wwwroot/mod/congrea/pix/attendance.png";
             $buttons[] = html_writer::link(
-                new moodle_url($returnurl, array('session' => $record->session)),
+                new moodle_url($returnurl, array('session' => $record->session, 'psession'=> true)),
                 html_writer::empty_tag('img', array(
                     'src' => $imageurl,
                     'alt' => 'Attendance Report', 'class' => 'attend'

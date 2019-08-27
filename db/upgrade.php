@@ -287,5 +287,41 @@ function xmldb_congrea_upgrade($oldversion) {
         }
         upgrade_mod_savepoint(true, 2019061702, 'congrea');
     }
+    if($oldversion < 2019082700) {
+        $table = new xmldb_table('congrea_sessions');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null);
+        $table->add_field('starttime', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null);
+        $table->add_field('endtime', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null);
+        $table->add_field('timeduration', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null);
+        $table->add_field('repeattype', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, 0, null, null);
+        $table->add_field('additional', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, 0, null, null);
+        $table->add_field('teacherid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, 0, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, 0, null, null);
+        $table->add_field('congreaid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, 0, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+        $table = new xmldb_table('congrea');
+        if ($dbman->table_exists($table)) {
+            $congreadata = $DB->get_records('congrea');
+            if (!empty($congreadata)) {
+                foreach ($congreadata as $data) {
+                    $congreaold = new stdClass();
+                    //$congreaold->instanceid = $cm->instance;
+                        $congreaold->starttime = $data->opentime;
+                        $congreaold->endtime = $data->closetime;
+                        $congreaold->timeduration = round((abs($congreaold->endtime - $congreaold->starttime) / 60));
+                        $congreaold->repeattype = 0;
+                        $congreaold->additional = 0;
+                        $congreaold->teacherid = $data->moderatorid;
+                        $congreaold->congreaid = $data->id;
+                        $DB->insert_record('congrea_sessions', $congreaold);
+                }
+            }
+            //$dbman->drop_table($table);
+        }
+        upgrade_mod_savepoint(true, 2019082700, 'congrea');
+    }
     return true;
 }
