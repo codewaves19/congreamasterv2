@@ -235,3 +235,4 @@ $string['next3month'] = 'NEXT 3 month sessions';
 $string['selectdays'] = 'Select days';
 $string['repeaton'] = 'Repeat on';
 $string['selectdays'] = 'Select days for week';
+$string['addmultiplesessions'] = 'Repeat settings';

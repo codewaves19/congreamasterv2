@@ -46,21 +46,13 @@ if ($id) {
     print_error('You must specify a course_module ID or an instance ID');
 }
 require_login($course, true, $cm);
-// $strStart = '2013-06-19 18:25'; 
-// $strEnd   = '2018-06-19 21:47'; 
-
-// $dteStart = new DateTime($strStart); 
-// $dteEnd   = new DateTime($strEnd); 
-// $dteDiff  = $dteStart->diff($dteEnd); 
-// print $dteDiff->format("%H:%I:%S");
-
 $context = context_module::instance($cm->id);
 // Print the page header.
 $PAGE->set_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => $sessionsettings));
 $PAGE->set_title(format_string($congrea->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
-$mform = new mod_congrea_session_form(null, array('id' => $id, 'sessionsettings' => $sessionsettings, 'edit'=>$edit));
+$mform = new mod_congrea_session_form(null, array('id' => $id, 'sessionsettings' => $sessionsettings, 'edit' => $edit));
 if ($mform->is_cancelled()) {
     // Do nothing.
     redirect(new moodle_url('/mod/congrea/view.php', array('id' => $cm->id)));
@@ -74,11 +66,8 @@ if ($mform->is_cancelled()) {
     //echo $starttime = date('H:i:s', $data->starttime); exit;
     $timeduration = round((abs($data->endtime - $data->starttime) / 60));
     //$timeduration = $minutes;
-    $data->timeduration = $timeduration;      
-    if ($fromform->period == 0) { // If do not Repeat.
-        $data->repeattype = 0;
-        $data->additional = 'none';
-    } else { // If repeat.
+    $data->timeduration = $timeduration;
+    if (!empty($fromform->addmultiply)) {
         $data->repeattype = $fromform->period;
         if (!empty($fromform->days)) {
             $prefix = $daylist = '';
@@ -87,17 +76,20 @@ if ($mform->is_cancelled()) {
                 $prefix = ', ';
             }
             $data->additional = $daylist;
-         } else {
-             $data->additional = 'none';
+        } else {
+            $data->additional = 'none';
         }
+    } else {
+        $data->repeattype = 0;
+        $data->additional = 'none';
     }
-    $data->teacherid = $fromform->moderatorid; 
+    $data->teacherid = $fromform->moderatorid;
     $data->congreaid = $congrea->id;
-    $exist= $DB->get_field('congrea_sessions', 'congreaid', array('congreaid' => $congrea->id));
-    if(!$exist) {
+    $exist = $DB->get_field('congrea_sessions', 'congreaid', array('congreaid' => $congrea->id));
+    if (!$exist) {
         $sessionid = $DB->insert_record('congrea_sessions', $data); // insert record in congrea table.
         mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $fromform->tosessiondate, $timeduration);
-    } else if($edit) {
+    } else if ($edit) {
         //echo '<pre>'; print_r($fromform); exit;
         $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id)); // By this delete all repeat session.
         $sessionid = $edit;
@@ -106,13 +98,15 @@ if ($mform->is_cancelled()) {
         mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $fromform->tosessiondate, $timeduration);
     }
     //mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $fromform->tosessiondate, $timeduration);
-    if ($fromform->period > 0) { // Here need to calculate repeate dates.
-        $params = array('modulename' => 'congrea', 'instance' => $congrea->id); // create multiple.
-        $eventid = $DB->get_field('event', 'id', $params);
-        $expecteddate = date('Y-m-d H:i:s', strtotime(date('Y-m-d H:i:s', $fromform->fromsessiondate) . "+$fromform->period weeks"));
-        $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $expecteddate);
-        foreach ($datelist as $startdate) {
-            repeat_calendar($congrea, $eventid, $startdate, $sessionid, $timeduration);
+    if (!empty($fromform->addmultiply)) {
+        if ($fromform->period > 0) { // Here need to calculate repeate dates.
+            $params = array('modulename' => 'congrea', 'instance' => $congrea->id); // create multiple.
+            $eventid = $DB->get_field('event', 'id', $params);
+            $expecteddate = date('Y-m-d H:i:s', strtotime(date('Y-m-d H:i:s', $fromform->fromsessiondate) . "+$fromform->period weeks"));
+            $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $expecteddate, $data->additional);
+            foreach ($datelist as $startdate) {
+                repeat_calendar($congrea, $eventid, $startdate, $sessionid, $timeduration);
+            }
         }
     }
     //$OUTPUT->notification($returnurl, get_string('updated', '', $sessionname, 'notifysucess'));
@@ -127,7 +121,7 @@ congrea_print_tabs($currenttab, $context, $cm, $congrea);
 echo $OUTPUT->heading('Scheduled Sessions');
 $table = new html_table();
 $table->head = array('Start Date', 'Day', 'Teacher', 'Repeat Type', 'Session End', 'Action');
-$sessionlist = $DB->get_records('congrea_sessions', array('congreaid'=>$congrea->id));
+$sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id));
 if (!empty($sessionlist)) {
     foreach ($sessionlist as $list) {
         //echo $starttime = date('H:i:s', $list->starttime);
@@ -146,7 +140,7 @@ if (!empty($sessionlist)) {
         $row[] = 'Weekly';
         $row[] = userdate($list->endtime);
         $row[] = html_writer::link(
-            new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'edit' => $list->id,'sessionsettings' => $sessionsettings)),
+            new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'edit' => $list->id, 'sessionsettings' => $sessionsettings)),
             'Edit',
             array('class' => 'actionlink exportpage')
         );
@@ -165,14 +159,14 @@ if (!empty($sessionlist)) {
 if ($edit) {
     $list = $DB->get_records('congrea_sessions', array('id' => $edit));
     $days = array();
-    foreach($list as $formdata) {
+    foreach ($list as $formdata) {
         $data = new stdClass;
         $data->fromsessiondate = $formdata->starttime;
         $data->tosessiondate = $formdata->endtime;
         $data->period = $formdata->repeattype;
         $data->moderatorid = $formdata->teacherid;
         $dayname = (explode(", ", $formdata->additional));
-        foreach($dayname as $d) {
+        foreach ($dayname as $d) {
             $key = trim($d, '"');
             $days[$key] = 1;
         }
@@ -181,8 +175,8 @@ if ($edit) {
     }
     $mform->set_data($data);
 }
-$tablestatus= $DB->get_field('congrea_sessions', 'congreaid', array('congreaid' => $congrea->id));
-if(empty($tablestatus) || $edit) {
+$tablestatus = $DB->get_field('congrea_sessions', 'congreaid', array('congreaid' => $congrea->id));
+if (empty($tablestatus) || $edit) {
     $mform->display();
 }
 // Finish the page.

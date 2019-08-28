@@ -64,12 +64,19 @@ class mod_congrea_session_form extends moodleform {
         $teacheroptions = congrea_course_teacher_list();
         $mform->addElement('select', 'moderatorid', get_string('selectteacher', 'congrea'), $teacheroptions);
         $mform->addHelpButton('moderatorid', 'selectteacher', 'congrea');
-        $period = array(0=>'Do not repeat',1 => 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        // Repeat.
+        $mform->addElement('header', 'headeraddmultiplesessions', get_string('addmultiplesessions', 'congrea'));
+        //$mform->closeHeaderBefore('headeraddmultiplesessions');
+        $mform->addElement('checkbox', 'addmultiply', '', get_string('repeatsessions', 'congrea'));
+        $mform->addHelpButton('addmultiply', 'repeatsessions', 'congrea');
+        $period = array(1 => 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
             21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36);
-        // $periodgroup = array();
-        // $periodgroup[] = $mform->createElement('select', 'period', '', $period, false, true);
-        // $periodgroup[] = $mform->createElement('static', 'perioddesc', '', get_string('week', 'congrea'));
-        // $mform->addGroup($periodgroup, 'periodgroup', get_string('repeatevery', 'congrea'), array(' '), false);
+        
+        $periodgroup = array();
+        $periodgroup[] = $mform->createElement('select', 'period', '', $period, false, true);
+        $periodgroup[] = $mform->createElement('static', 'perioddesc', '', get_string('week', 'congrea'));
+        $mform->addGroup($periodgroup, 'periodgroup', get_string('repeatevery', 'congrea'), array(' '), false);
+        $mform->disabledIf('periodgroup', 'addmultiply', 'notchecked'); 
         //$mform->disabledIf('periodgroup', 'repeatsessions', 'notchecked');
         $days = array();
         $days[] = $mform->createElement('checkbox', 'Sun', '', get_string('sunday', 'calendar'));
@@ -81,10 +88,7 @@ class mod_congrea_session_form extends moodleform {
         $days[] = $mform->createElement('checkbox', 'Sat', '', get_string('saturday', 'calendar'));
         //echo '<pre>'; print_r($days); exit;
         $mform->addGroup($days, 'days', get_string('repeaton', 'congrea'), array('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'), true);
-        $periodgroup = array();
-        $periodgroup[] = $mform->createElement('select', 'period', '', $period, false, true);
-        $periodgroup[] = $mform->createElement('static', 'perioddesc', '', get_string('week', 'congrea'));
-        $mform->addGroup($periodgroup, 'periodgroup', get_string('repeatevery', 'congrea'), array(' '), false);   
+        $mform->disabledIf('days', 'addmultiply', 'notchecked');   
         $this->add_action_buttons();
     }
 
@@ -109,7 +113,7 @@ class mod_congrea_session_form extends moodleform {
                 $data['tosessiondate'] == $data['fromsessiondate']) {
             $errors['tosessiondate'] = get_string('closesameopen', 'congrea');
         }
-        if($data['period'] > 0 && empty($data['days'])) {
+        if(!empty($data['period']) && $data['period'] > 0 && empty($data['days'])) {
             $errors['days'] =  get_string('selectdays', 'congrea');
         }
         return $errors;

@@ -770,16 +770,25 @@ function binarytohex($s)
     return $ret;
 }
 
-function reapeat_date_list($startdate, $expecteddate)
+function reapeat_date_list($startdate, $expecteddate, $days)
 {
     $nextdate = array();
+    $listdays = str_replace('"', '', $days);
+    $dayslist = explode(", ", $listdays);
+    //$dayslist = $listdays;
+    //echo '<pre>'; print_r($dayslist); exit;
+    //$nextdate = array();
     while (strtotime($startdate) < strtotime($expecteddate)) {
         $startdate = date('Y-m-d H:i:s', strtotime("+1 days", strtotime($startdate))); // TODO: add time of weeks directly.
         $nameofday = date('D', strtotime($startdate));
-        if ($nameofday == 'Mon' || $nameofday == 'Tue') { // Get monday tuesday date.
+        //echo $nameofday; exit;
+        if (in_array($nameofday, $dayslist)) {
+            // if ($nameofday == 'Mon' || $nameofday == 'Tue') { // Get monday tuesday date.
             $nextdate[] = $startdate;
+            // }
         }
     }
+    // echo '<pre>'; print_r($nextdate); exit;
     return $nextdate;
 }
 
@@ -849,8 +858,9 @@ function congrea_print_tabs($currenttab, $context, $cm, $congrea)
     echo $OUTPUT->tabtree($row, $currenttab);
 }
 
-function array_key_first(array $arr) {
-    foreach($arr as $key => $unused) {
+function array_key_first(array $arr)
+{
+    foreach ($arr as $key => $unused) {
         return $key;
     }
     return NULL;
@@ -905,34 +915,39 @@ function unmarshalValue(array $value, $mapAsObject = false)
 }
 
 function recording_view($uid, $recordingattendance)
-    {
-        $sum = 0;
-        $datapercent = 0;
-        $recodingtime = null;
-        foreach ($recordingattendance['Items'] as $i) {
-            $rdata = unmarshalItem($i);
-            $userid = (int) filter_var($rdata['sk'], FILTER_SANITIZE_NUMBER_INT);
-            if ($uid == $userid) {
-                if (is_array($rdata['data'])) {
-                    if (empty($recodingtime)) {
-                        $recodingtime = $rdata['data']['rtt'];
-                    }
-                    foreach ($rdata['data'] as $data) {
-                        //echo '<pre>'; print_r($data); exit;
-                        if (is_array($data)) {
-                            foreach ($data as $key) {
-                                //echo '<pre>'; print_r($key); exit;
-                                foreach ($key as $k => $v) {
-                                    $viewdata = $v - $k;
-                                    $sum = $viewdata + $sum;
-                                }
-                            }
+{
+    $sum = 0;
+    $datapercent = 0;
+    $recodingtime = null;
+    foreach ($recordingattendance['Items'] as $i) {
+        $rdata = unmarshalItem($i);
+        $userid = (int) filter_var($rdata['sk'], FILTER_SANITIZE_NUMBER_INT);
+        if ($uid == $userid) {
+            if (is_array($rdata['data'])) {
+                if (empty($recodingtime)) {
+                    $recodingtime = $rdata['data']['rtt'];
+                }
+                foreach ($rdata['data'] as $data) {
+                    //echo '<pre>'; print_r($data); exit;
+                    if (is_array($data)) {
+                        foreach ($data as $key) {
+                            //echo '<pre>'; print_r($key); exit;
+                            $k = array_keys($key);
+                            $v = array_values($key);
+                            $arrkey = $k[0];
+                            $arrvalue = $v[0];
+                            $viewdata = $arrvalue - $arrkey;
+                            $sum = $viewdata + $sum;
+                            // foreach ($key as $k => $v) {
+                            //     $viewdata = $v - $k;
+                            //     $sum = $viewdata + $sum;
+                            // }
                         }
                     }
-                    $datapercent = round((($sum * 5) / ($recodingtime / 1000)) * 100);
                 }
-                return $datapercent;
+                $datapercent = round((($sum * 5) / ($recodingtime / 1000)) * 100);
             }
+            return $datapercent;
         }
     }
-       
+}

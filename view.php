@@ -63,7 +63,7 @@ if (!empty($sessionlist)) {
 } else {
     redirect(new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true)));
 }
-if ($repeat > 0) { // Repeat dates.
+if (!empty($repeat)) { // Repeat dates.
     $time = time();
     //$sessionend =  $endtime;
     $sql = "SELECT timestart from {event} where instance = $congrea->id and modulename = 'congrea' and timestart <= $time";
@@ -76,7 +76,7 @@ if ($repeat > 0) { // Repeat dates.
         $repeattimeend = strtotime($endtime);
     }
 }
-if (!$repeat) {
+if (empty($repeat)) {
     $sessionendtime = $endtime;
     $sessionstarttime = $starttime;
 } else {
@@ -451,7 +451,7 @@ if ($psession) {
         if (has_capability('mod/congrea:attendance', $context)) {
             $imageurl = "$CFG->wwwroot/mod/congrea/pix/attendance.png";
             $buttons[] = html_writer::link(
-                new moodle_url($returnurl, array('session' => $record->session, 'psession'=> true)),
+                new moodle_url($returnurl, array('session' => $record->session, 'psession' => true)),
                 html_writer::empty_tag('img', array(
                     'src' => $imageurl,
                     'alt' => 'Attendance Report', 'class' => 'attend'
@@ -525,11 +525,14 @@ if ($session) {
             $apiurl2 = 'https://api.congrea.net/t/analytics/attendancerecording';
             $recdata = attendence_curl_request($apiurl2, $session, $key, $authpassword, $authusername, $room); // TODO.
             $recordingattendance = json_decode($recdata, true);
-            $recview = recording_view($sattendence->uid, $recordingattendance);
+            if (!empty($recview = recording_view($sattendence->uid, $recordingattendance))) { } else {
+                $recview = 0;
+            }
+            //$recview = recording_view($sattendence->uid, $recordingattendance);
             $table->data[] = array(
                 $username, date('y-m-d h:i:s', $studentsstatus->starttime),
                 date('y-m-d h:i:s', $studentsstatus->endtime), $studentsstatus->totalspenttime . ' ' . 'minutes',
-                round($presence) . '%', $recview.'%', '<p style="color:green;"><b>P</b></p>'
+                round($presence) . '%', $recview . '%', '<p style="color:green;"><b>P</b></p>'
             );
         }
         if (!empty($attendence)) {
@@ -545,7 +548,11 @@ if ($session) {
                 } else {
                     $username = get_string('nouser', 'mod_congrea');
                 }
-                $table->data[] = array($username, '-', '-', '-', '-', '-', '<p style="color:red;"><b>A</b></p>');
+                if (!empty($recview = recording_view($data, $recordingattendance))) { } else {
+                    $recview = 0;
+                }
+                //$recview = recording_view($data, $recordingattendance);
+                $table->data[] = array($username, '-', '-', '-', '-', $recview . '%', '<p style="color:red;"><b>A</b></p>');
             }
         } else {
             echo get_string('absentuser', 'mod_congrea');
