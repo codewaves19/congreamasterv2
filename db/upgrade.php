@@ -287,12 +287,13 @@ function xmldb_congrea_upgrade($oldversion) {
         }
         upgrade_mod_savepoint(true, 2019061702, 'congrea');
     }
-    if($oldversion < 2019082700) {
+    if($oldversion < 2019082800) {
         $table = new xmldb_table('congrea_sessions');
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null);
         $table->add_field('starttime', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null);
         $table->add_field('endtime', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null);
         $table->add_field('timeduration', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null);
+        $table->add_field('isrepeat', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, 0, null, null);
         $table->add_field('repeattype', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, 0, null, null);
         $table->add_field('additional', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, 0, null, null);
         $table->add_field('teacherid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, 0, null, null);
@@ -311,6 +312,7 @@ function xmldb_congrea_upgrade($oldversion) {
                         $congreaold->starttime = $data->opentime;
                         $congreaold->endtime = $data->closetime;
                         $congreaold->timeduration = round((abs($congreaold->endtime - $congreaold->starttime) / 60));
+                        $congreaold->isrepeat = 0;
                         $congreaold->repeattype = 0;
                         $congreaold->additional = 0;
                         $congreaold->teacherid = $data->moderatorid;
@@ -320,7 +322,7 @@ function xmldb_congrea_upgrade($oldversion) {
             }
             //$dbman->drop_table($table);
         }
-        upgrade_mod_savepoint(true, 2019082700, 'congrea');
+        upgrade_mod_savepoint(true, 2019082800, 'congrea');
     }
     return true;
 }

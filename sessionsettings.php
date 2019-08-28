@@ -68,6 +68,7 @@ if ($mform->is_cancelled()) {
     //$timeduration = $minutes;
     $data->timeduration = $timeduration;
     if (!empty($fromform->addmultiply)) {
+        $data->isrepeat = $fromform->addmultiply;
         $data->repeattype = $fromform->period;
         if (!empty($fromform->days)) {
             $prefix = $daylist = '';
@@ -80,6 +81,7 @@ if ($mform->is_cancelled()) {
             $data->additional = 'none';
         }
     } else {
+        $data->isrepeat = 0;
         $data->repeattype = 0;
         $data->additional = 'none';
     }
@@ -137,7 +139,12 @@ if (!empty($sessionlist)) {
             $username = get_string('nouser', 'mod_congrea');
         }
         $row[] = $username;
-        $row[] = 'Weekly';
+        if(!empty($list->repeattype)) {
+            $row[] = 'Weekly';
+        } else {
+            $row[] = 'none';
+        }
+        //$row[] = 'Weekly';
         $row[] = userdate($list->endtime);
         $row[] = html_writer::link(
             new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'edit' => $list->id, 'sessionsettings' => $sessionsettings)),
@@ -165,6 +172,7 @@ if ($edit) {
         $data->tosessiondate = $formdata->endtime;
         $data->period = $formdata->repeattype;
         $data->moderatorid = $formdata->teacherid;
+        $data->addmultiply = $formdata->isrepeat;
         $dayname = (explode(", ", $formdata->additional));
         foreach ($dayname as $d) {
             $key = trim($d, '"');
