@@ -177,7 +177,9 @@ if ($edit) {
 }
 $tablestatus = $DB->get_field('congrea_sessions', 'congreaid', array('congreaid' => $congrea->id));
 if (empty($tablestatus) || $edit) {
-    $mform->display();
+    if (has_capability('mod/congrea:sessionesetting', $context)) {
+        $mform->display();
+    }
 }
 // Finish the page.
 echo $OUTPUT->footer();

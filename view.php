@@ -54,15 +54,22 @@ if ($id) {
 $sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id));
 if (!empty($sessionlist)) {
     foreach ($sessionlist as $list) {
+        //echo '<pre>'; print_r($list); exit;
         $starttime = $list->starttime;
         $endtime = $list->endtime;
         $teacherid = $list->teacherid;
-        $repeat = $list->repeattype;
+        if(!empty($list->repeattype)) {
+            $repeat = $list->repeattype;
+        } else {
+            $repeat = 0;
+        }
+        //$repeat = $list->repeattype;
         $duration = $list->timeduration;
     }
 } else {
     redirect(new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true)));
 }
+
 if (!empty($repeat)) { // Repeat dates.
     $time = time();
     //$sessionend =  $endtime;
@@ -74,6 +81,9 @@ if (!empty($repeat)) { // Repeat dates.
         $starttime = date("Y-m-d H:i:s", $repeattimestart);
         $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)));
         $repeattimeend = strtotime($endtime);
+    } else {
+        $repeattimestart = $starttime;
+        $repeattimeend = $endtime;
     }
 }
 if (empty($repeat)) {
