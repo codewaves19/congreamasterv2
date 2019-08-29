@@ -238,3 +238,5 @@ $string['selectdays'] = 'Select days for week';
 $string['addmultiplesessions'] = 'Repeat settings';
 $string['esessiondate'] = 'You have entered an invalid date or time.';
 $string['hourssetting'] = "You have entered an invalid date or time. Make sure the total session's length should not exceed 10 hours.";
+$string['noupcomingsession'] = 'There are no upcoming sessions.';
+$string['updated'] = 'Saved sucessfully.';

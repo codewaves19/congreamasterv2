@@ -593,7 +593,7 @@ if (!empty($table) and $session and $sessionstatus) {
 echo html_writer::tag('div', "", array('class' => 'clear'));
 echo html_writer::end_tag('div');
 echo '</br>';
-if ($upcomingsession || $upcomingsession == 0 and !$psession) { // Upcoming sessions. // TODO:
+if ($upcomingsession || $upcomingsession == 0 and !$psession) { // Upcoming sessions. // TODO for function:
     congrea_print_dropdown_form($id, $drodowndisplaymode);
     $table = new html_table();
     $table->head = array('Start Date', 'Time Duration');
@@ -610,7 +610,8 @@ if ($upcomingsession || $upcomingsession == 0 and !$psession) { // Upcoming sess
                 $table->data[] = $row;
             }
         } else {
-            echo 'no data found';
+            //echo 'no data found';
+            echo $OUTPUT->notification(get_string('noupcomingsession', 'congrea'));
         }
     } else if ($drodowndisplaymode == 2) {
         //echo '30 days';
@@ -625,7 +626,7 @@ if ($upcomingsession || $upcomingsession == 0 and !$psession) { // Upcoming sess
                 $table->data[] = $row;
             }
         } else {
-            echo 'no data found';
+            echo $OUTPUT->notification(get_string('noupcomingsession', 'congrea'));
         }
     } else if ($drodowndisplaymode == 3) {
         $timestart = time();
@@ -640,16 +641,15 @@ if ($upcomingsession || $upcomingsession == 0 and !$psession) { // Upcoming sess
                 $table->data[] = $row;
             }
         } else {
-            echo 'no data found';
+            //echo 'no data found';
+            echo $OUTPUT->notification(get_string('noupcomingsession', 'congrea'));
         }
     }
     if (!empty($table->data)) {
         echo html_writer::start_tag('div', array('class' => 'no-overflow'));
         echo html_writer::table($table);
         echo html_writer::end_tag('div');
-    } else {
-        echo 'no session';
-    }
+    } 
 }
 
 echo $OUTPUT->footer();

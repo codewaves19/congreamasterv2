@@ -112,8 +112,8 @@ if ($mform->is_cancelled()) {
             }
         }
     }
-    //$OUTPUT->notification($returnurl, get_string('update', 'congrea'));
-    //$OUTPUT->notification($returnurl, get_string('updated', '', ' ', 'notifysucess'));
+    //echo $OUTPUT->notification(get_string('updated', 'congrea', 'notifysucess'));
+    echo $OUTPUT->notification(get_string('updated', 'mod_congrea'), 'notifysuccess');
 }
 // Output starts here.
 echo $OUTPUT->header();
