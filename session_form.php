@@ -116,8 +116,15 @@ class mod_congrea_session_form extends moodleform {
         if(!empty($data['period']) && $data['period'] > 0 && empty($data['days'])) {
             $errors['days'] =  get_string('selectdays', 'congrea');
         }
+        if($data['fromsessiondate'] < time()) {
+            $errors['fromsessiondate'] =  get_string('esessiondate', 'congrea');
+        }
+        $expecteddate = strtotime(date('Y-m-d H:i:s', strtotime("+600 minutes", $data['fromsessiondate'])));
+        if($data['tosessiondate']> $expecteddate) {
+            $errors['tosessiondate'] =  get_string('hourssetting', 'congrea');
+        }
+        
         return $errors;
     }
 
 }
-

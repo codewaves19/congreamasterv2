@@ -236,3 +236,5 @@ $string['selectdays'] = 'Select days';
 $string['repeaton'] = 'Repeat on';
 $string['selectdays'] = 'Select days for week';
 $string['addmultiplesessions'] = 'Repeat settings';
+$string['esessiondate'] = 'Select valid date, the selected date is past date';
+$string['hourssetting'] = 'You only create session within 10 hours';

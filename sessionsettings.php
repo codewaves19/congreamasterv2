@@ -47,6 +47,7 @@ if ($id) {
 }
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
+$returnurl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true));
 // Print the page header.
 $PAGE->set_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => $sessionsettings));
 $PAGE->set_title(format_string($congrea->name));
@@ -111,7 +112,8 @@ if ($mform->is_cancelled()) {
             }
         }
     }
-    //$OUTPUT->notification($returnurl, get_string('updated', '', $sessionname, 'notifysucess'));
+    //$OUTPUT->notification($returnurl, get_string('update', 'congrea'));
+    //$OUTPUT->notification($returnurl, get_string('updated', '', ' ', 'notifysucess'));
 }
 // Output starts here.
 echo $OUTPUT->header();
