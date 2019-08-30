@@ -823,27 +823,29 @@ function congrea_print_dropdown_form($id, $drodowndisplaymode)
     echo $OUTPUT->render($select);
 }
 
-// function congrea_get_records($type) {
-//     global $DB;
-//     $table = new html_table();
-//     $table->head = array('Start Date', 'Time Duraion</br>H:I:S', 'Duration', 'sAction');
-//     $table->data[] = array(); = array();
-//     $sql = "SELECT * FROM {event} where modulename = 'congrea' ORDER BY timestart ASC LIMIT $type"; // To do.
-//     $sessionlist = $DB->get_records_sql($sql);
-//     if (!empty($sessionlist)) {
-//         foreach ($sessionlist as $list) {
-//             $row = array();
-//             $row[] = userdate($list->timestart);
-//             $row[] = date('H:i:s', $list->timeduration);
-//             $row[] = $list->timeduration;
-//             $table->data[] = $row;
-//         }
-//         //echo '<pre>'; print_r($row); exit;
-//         return  $table->data;
-//     } else {
-//         echo 'no data found';
-//     }
-// }
+function congrea_get_records($congrea, $type) {
+    global $DB, $OUTPUT;
+    $table = new html_table();
+    $table->head = array('Start Date', 'Time Duration');
+    $timestart = time();
+    $sql = "SELECT * FROM {event} where modulename = 'congrea' and instance = $congrea->id  and timestart >= $timestart ORDER BY timestart ASC LIMIT $type"; // To do.
+    $sessionlist = $DB->get_records_sql($sql);
+    if (!empty($sessionlist)) {
+        foreach ($sessionlist as $list) {
+            $row = array();
+            $row[] = userdate($list->timestart);
+            $row[] = $list->timeduration . ' ' . 'Minutes';
+            $table->data[] = $row;
+        }
+        if (!empty($table->data)) {
+            echo html_writer::start_tag('div', array('class' => 'no-overflow'));
+            echo html_writer::table($table);
+            echo html_writer::end_tag('div');
+        } 
+    } else {
+        echo $OUTPUT->notification(get_string('noupcomingsession', 'congrea'));
+    }
+}
 
 function congrea_print_tabs($currenttab, $context, $cm, $congrea)
 {

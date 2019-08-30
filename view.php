@@ -58,7 +58,7 @@ if (!empty($sessionlist)) {
         $starttime = $list->starttime;
         $endtime = $list->endtime;
         $teacherid = $list->teacherid;
-        if(!empty($list->repeattype)) {
+        if (!empty($list->repeattype)) {
             $repeat = $list->repeattype;
         } else {
             $repeat = 0;
@@ -593,63 +593,17 @@ if (!empty($table) and $session and $sessionstatus) {
 echo html_writer::tag('div', "", array('class' => 'clear'));
 echo html_writer::end_tag('div');
 echo '</br>';
-if ($upcomingsession || $upcomingsession == 0 and !$psession) { // Upcoming sessions. // TODO for function:
+if ($upcomingsession || $upcomingsession == 0 and !$psession) { // Upcoming sessions
     congrea_print_dropdown_form($id, $drodowndisplaymode);
-    $table = new html_table();
-    $table->head = array('Start Date', 'Time Duration');
     if ($drodowndisplaymode == 1 || $drodowndisplaymode == 0 and !$psession) { // Get 7 session.
-        //echo '7 days';
-        $timestart = time();
-        $sql = "SELECT * FROM {event} where modulename = 'congrea' and instance = $congrea->id  and timestart >= $timestart ORDER BY timestart ASC LIMIT 7"; // To do.
-        $sessionlist = $DB->get_records_sql($sql);
-        if (!empty($sessionlist)) {
-            foreach ($sessionlist as $list) {
-                $row = array();
-                $row[] = userdate($list->timestart);
-                $row[] = $list->timeduration . ' ' . 'Minutes';
-                $table->data[] = $row;
-            }
-        } else {
-            //echo 'no data found';
-            echo $OUTPUT->notification(get_string('noupcomingsession', 'congrea'));
-        }
+        congrea_get_records($congrea, 7);
     } else if ($drodowndisplaymode == 2) {
         //echo '30 days';
-        $timestart = time();
-        $sql = "SELECT * FROM {event} where modulename = 'congrea' and instance = $congrea->id  and timestart >= $timestart ORDER BY timestart ASC LIMIT 30"; // To do.
-        $sessionlist = $DB->get_records_sql($sql);
-        if (!empty($sessionlist)) {
-            foreach ($sessionlist as $list) {
-                $row = array();
-                $row[] = userdate($list->timestart);
-                $row[] = $list->timeduration . ' ' . 'Minutes';
-                $table->data[] = $row;
-            }
-        } else {
-            echo $OUTPUT->notification(get_string('noupcomingsession', 'congrea'));
-        }
+        congrea_get_records($congrea, 30);
     } else if ($drodowndisplaymode == 3) {
-        $timestart = time();
-        //echo '3 month';
-        $sql = "SELECT * FROM {event} where modulename = 'congrea' and instance = $congrea->id  and timestart >= $timestart ORDER BY timestart ASC LIMIT 90"; // To do.
-        $sessionlist = $DB->get_records_sql($sql);
-        if (!empty($sessionlist)) {
-            foreach ($sessionlist as $list) {
-                $row = array();
-                $row[] = userdate($list->timestart);
-                $row[] = $list->timeduration . ' ' . 'Minutes';
-                $table->data[] = $row;
-            }
-        } else {
-            //echo 'no data found';
-            echo $OUTPUT->notification(get_string('noupcomingsession', 'congrea'));
-        }
+        //echo '90 days';
+        congrea_get_records($congrea, 90);
     }
-    if (!empty($table->data)) {
-        echo html_writer::start_tag('div', array('class' => 'no-overflow'));
-        echo html_writer::table($table);
-        echo html_writer::end_tag('div');
-    } 
 }
 
 echo $OUTPUT->footer();
