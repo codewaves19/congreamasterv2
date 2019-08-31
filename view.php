@@ -398,9 +398,10 @@ if ($sessionendtime > time() && $sessionstarttime <= time()) {
         $joinbutton
     );
     echo $form;
-} else {
-    // Congrea closed.
-    echo $OUTPUT->heading(get_string('sessionclosed', 'congrea'));
+} else {   
+    if (!$psession) {
+        echo $OUTPUT->heading(get_string('sessionclosed', 'congrea'));  // Congrea closed.
+    }
 }
 // Upload congrea recording.
 $postdata = json_encode(array('room' => $room));

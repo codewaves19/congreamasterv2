@@ -34,7 +34,7 @@ require_once($CFG->dirroot . '/mod/congrea/locallib.php');
 /**
  * File update name form
  *
- * @copyright  2014 Pinky Sharma
+ * @copyright  2019 Ravi Kumar
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class mod_congrea_session_form extends moodleform {
@@ -62,8 +62,6 @@ class mod_congrea_session_form extends moodleform {
         $mform->addHelpButton('fromsessiondate', 'fromsessiondate', 'congrea');
         $mform->addElement('duration', 'timeduration', get_string('timeduration', 'congrea'), array('optional' => false));
         $mform->addHelpButton('timeduration', 'timeduration', 'congrea');
-        //$mform->addElement('date_time_selector', 'tosessiondate', get_string('tosessiondate', 'congrea'));
-        //$mform->addHelpButton('tosessiondate', 'tosessiondate', 'congrea');
         // Select teacher.
         $teacheroptions = congrea_course_teacher_list();
         $mform->addElement('select', 'moderatorid', get_string('selectteacher', 'congrea'), $teacheroptions);
@@ -84,7 +82,6 @@ class mod_congrea_session_form extends moodleform {
         $periodgroup[] = $mform->createElement('static', 'perioddesc', '', get_string('week', 'congrea'));
         $mform->addGroup($periodgroup, 'periodgroup', get_string('repeatevery', 'congrea'), array(' '), false);
         $mform->disabledIf('periodgroup', 'addmultiply', 'notchecked');
-        //$mform->disabledIf('periodgroup', 'repeatsessions', 'notchecked');
         $days = array();
         $days[] = $mform->createElement('checkbox', 'Sun', '', get_string('sunday', 'calendar'));
         $days[] = $mform->createElement('checkbox', 'Mon', '', get_string('monday', 'calendar'));
@@ -93,7 +90,6 @@ class mod_congrea_session_form extends moodleform {
         $days[] = $mform->createElement('checkbox', 'Thu', '', get_string('thursday', 'calendar'));
         $days[] = $mform->createElement('checkbox', 'Fri', '', get_string('friday', 'calendar'));
         $days[] = $mform->createElement('checkbox', 'Sat', '', get_string('saturday', 'calendar'));
-        //echo '<pre>'; print_r($days); exit;
         $mform->addGroup($days, 'days', get_string('repeaton', 'congrea'), array('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'), true);
         $mform->disabledIf('days', 'addmultiply', 'notchecked');   
         $this->add_action_buttons();
@@ -108,41 +104,24 @@ class mod_congrea_session_form extends moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        // Check open and close times are consistent.
-        //echo '<pre>'; print_r($data); exit;
-        // if ($data['fromsessiondate'] != 0 && $data['tosessiondate'] != 0 &&
-        //         $data['tosessiondate'] < $data['fromsessiondate']) {
-        //     $errors['tosessiondate'] = get_string('closebeforeopen', 'congrea');
-        // }
-        // if ($data['fromsessiondate'] != 0 && $data['tosessiondate'] == 0) {
-        //     $errors['tosessiondate'] = get_string('closenotset', 'congrea');
-        // }
-        // if ($data['fromsessiondate'] != 0 && $data['tosessiondate'] != 0 &&
-        //         $data['tosessiondate'] == $data['fromsessiondate']) {
-        //     $errors['tosessiondate'] = get_string('closesameopen', 'congrea');
-        // }
         if(!empty($data['period']) && $data['period'] > 0 && empty($data['days'])) {
             $errors['days'] =  get_string('selectdays', 'congrea');
         }
-        if($data['fromsessiondate'] < time()) {
+        $currentdate = time();
+        $previousday = strtotime(date('Y-m-d H:i:s', strtotime("-24 hours", $currentdate)));
+        if($data['fromsessiondate'] < $previousday) {
             $errors['fromsessiondate'] =  get_string('esessiondate', 'congrea');
         }
         if($data['timeduration'] == 0) {
             $errors['timeduration'] =  get_string('errortimeduration', 'congrea');
         }
         $durationinminutes = $data['timeduration'] / 60;
-        //echo $durationinminutes; exit;
         if($durationinminutes < 10) {
             $errors['timeduration'] =  get_string('errordurationlimit', 'congrea');
         }
         if($durationinminutes > 1440) { // Minutes of 24 hours.
             $errors['timeduration'] =  get_string('errortimeduration', 'congrea');
-        }
-        //$expecteddate = strtotime(date('Y-m-d H:i:s', strtotime("+600 minutes", $data['fromsessiondate'])));
-        // if($data['tosessiondate']> $expecteddate) {
-        //     $errors['tosessiondate'] =  get_string('hourssetting', 'congrea');
-        // }
-        
+        }        
         return $errors;
     }
 
