@@ -308,9 +308,9 @@ function xmldb_congrea_upgrade($oldversion) {
             if (!empty($congreadata)) {
                 foreach ($congreadata as $data) {
                     $congreaold = new stdClass();
-                    //$congreaold->instanceid = $cm->instance;
-                        $congreaold->starttime = $data->opentime;
-                        $congreaold->endtime = $data->closetime;
+                        $congreaold->starttime = time();
+                        $enddate = strtotime(date('Y-m-d H:i:s', strtotime("+1440 minutes", $congreaold->starttime)));
+                        $congreaold->endtime = $enddate;
                         $congreaold->timeduration = round((abs($congreaold->endtime - $congreaold->starttime) / 60));
                         $congreaold->isrepeat = 0;
                         $congreaold->repeattype = 0;
@@ -320,7 +320,6 @@ function xmldb_congrea_upgrade($oldversion) {
                         $DB->insert_record('congrea_sessions', $congreaold);
                 }
             }
-            //$dbman->drop_table($table);
         }
         upgrade_mod_savepoint(true, 2019082800, 'congrea');
     }
