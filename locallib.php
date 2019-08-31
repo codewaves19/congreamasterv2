@@ -222,7 +222,6 @@ function congrea_online_server_play(
  */
 function mod_congrea_update_calendar($congrea, $startime, $endtime, $timeduration)
 {
-    //echo $startime; exit;
     global $DB, $CFG;
     require_once($CFG->dirroot . '/calendar/lib.php');
     if ($startime && $endtime > time()) {
@@ -271,7 +270,6 @@ function repeat_calendar($congrea, $eventid, $strattime, $sessionid, $timedurati
     $event->timestart = strtotime($strattime);
     $event->format = 1;
     $event->courseid = $congrea->course;
-    //$event->courseid = $congrea->course;
     $event->groupid = 0;
     $teacherid = $DB->get_field('congrea_sessions', 'teacherid', array('id' => $sessionid));
     $event->userid = $teacherid;
@@ -280,7 +278,6 @@ function repeat_calendar($congrea, $eventid, $strattime, $sessionid, $timedurati
     $event->instance = $congrea->id;
     $event->eventtype = 'open';
     $event->timeduration = $timeduration;
-    //echo '<pre>';print_r($event); exit;
     calendar_event::create($event);
 }
 

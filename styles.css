@@ -130,9 +130,9 @@ table#recorded_data a[title="Delete"] img.iconsmall {
     }
 }
 
-body#page-mod-congrea-sessionsettings #page-content fieldset.fduration #id_timeduration_timeunit option[value="604800"],
-body#page-mod-congrea-sessionsettings #page-content fieldset.fduration #id_timeduration_timeunit option[value="86400"],
-body#page-mod-congrea-sessionsettings #page-content fieldset.fduration #id_timeduration_timeunit option[value="1"] {
+body#page-mod-congrea-sessionsettings #page-content fieldset #id_timeduration_timeunit option[value="604800"],
+body#page-mod-congrea-sessionsettings #page-content fieldset #id_timeduration_timeunit option[value="86400"],
+body#page-mod-congrea-sessionsettings #page-content fieldset #id_timeduration_timeunit option[value="1"] {
     display: none;
 }
 

@@ -308,7 +308,7 @@ function xmldb_congrea_upgrade($oldversion) {
             if (!empty($congreadata)) {
                 foreach ($congreadata as $data) {
                     $congreaold = new stdClass();
-                        $congreaold->starttime = time();
+                        $congreaold->starttime = time(); // Giving present time to start till 24 hours. 
                         $enddate = strtotime(date('Y-m-d H:i:s', strtotime("+1440 minutes", $congreaold->starttime)));
                         $congreaold->endtime = $enddate;
                         $congreaold->timeduration = round((abs($congreaold->endtime - $congreaold->starttime) / 60));
