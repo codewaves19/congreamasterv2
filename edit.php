@@ -59,13 +59,13 @@ $mform = new mod_congrea_edit_name($CFG->wwwroot . '/mod/congrea/edit.php?id=' .
 
 if ($mform->is_cancelled()) {
     // Do nothing.
-    redirect(new moodle_url('/mod/congrea/view.php', array('id' => $cm->id)));
+    redirect(new moodle_url('/mod/congrea/view.php', array('id' => $cm->id, 'psession' => true)));
 } else if ($fromform = $mform->get_data()) {
     $sessionname = $fromform->name;
     $postdata = json_encode(array('room' => $room, 'name' => $sessionname, 'session' => $update));
     $result = curl_request("https://api.congrea.net/backend/updaterecordingname", $postdata, $key);
     $sucess = json_decode($result);
-    $returnurl = redirect(new moodle_url('/mod/congrea/view.php', array('id' => $cm->id)));
+    $returnurl = redirect(new moodle_url('/mod/congrea/view.php', array('id' => $cm->id, 'psession'=>true)));
     if ($sucess->data == "success") {
         $OUTPUT->notification($returnurl, get_string('updated', '', $sessionname, 'notifysucess'));
     } else {

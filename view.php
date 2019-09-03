@@ -73,7 +73,7 @@ if (!empty($sessionlist)) {
 if (!empty($repeat)) { // Repeat dates.
     $time = time();
     //$sessionend =  $endtime;
-    $sql = "SELECT timestart from {event} where instance = $congrea->id and modulename = 'congrea' and timestart <= $time";
+    $sql = "SELECT timestart from {event} where instance = $congrea->id and modulename = 'congrea' and timestart <= $time ORDER BY timestart ASC";
     //$sql = "SELECT timestart from {event} where instance = $congrea->id and modulename = 'congrea'";
     $optiondata = $DB->get_records_sql($sql);
     if (!empty($optiondata)) {
@@ -86,6 +86,7 @@ if (!empty($repeat)) { // Repeat dates.
         $repeattimeend = $endtime;
     }
 }
+
 if (empty($repeat)) {
     $sessionendtime = $endtime;
     $sessionstarttime = $starttime;
@@ -239,12 +240,14 @@ $classname = 'wrapper-button';
 if (($sessionstarttime > time() && $sessionstarttime <= time())) {
     $classname .= ' online';
 }
-echo html_writer::start_tag('div', array('class' => $classname));
-echo html_writer::tag('div', get_string('congreatiming', 'mod_congrea', $a));
-if (!empty($teacherid)) {
-    echo html_writer::tag('div', get_string('teachername', 'mod_congrea', $user));
-} else {
-    echo html_writer::tag('div', 'Moderator : None');
+if (!$psession) {
+    echo html_writer::start_tag('div', array('class' => $classname));
+    echo html_writer::tag('div', get_string('congreatiming', 'mod_congrea', $a));
+    if (!empty($teacherid)) {
+        echo html_writer::tag('div', get_string('teachername', 'mod_congrea', $user));
+    } else {
+        echo html_writer::tag('div', 'Moderator : None');
+    }
 }
 // Conditions to show the intro can change to look for own settings or whatever.
 if ($congrea->intro) {
@@ -398,7 +401,7 @@ if ($sessionendtime > time() && $sessionstarttime <= time()) {
         $joinbutton
     );
     echo $form;
-} else {   
+} else {
     if (!$psession) {
         echo $OUTPUT->heading(get_string('sessionclosed', 'congrea'));  // Congrea closed.
     }
@@ -539,7 +542,6 @@ if ($session) {
             if (!empty($recview = recording_view($sattendence->uid, $recordingattendance))) { } else {
                 $recview = 0;
             }
-            //$recview = recording_view($sattendence->uid, $recordingattendance);
             $table->data[] = array(
                 $username, date('y-m-d h:i:s', $studentsstatus->starttime),
                 date('y-m-d h:i:s', $studentsstatus->endtime), $studentsstatus->totalspenttime . ' ' . 'minutes',
@@ -590,10 +592,11 @@ if (!empty($table) and $session and $sessionstatus) {
     echo html_writer::table($table);
     echo html_writer::end_tag('div');
 }
-
-echo html_writer::tag('div', "", array('class' => 'clear'));
-echo html_writer::end_tag('div');
-echo '</br>';
+if (!$psession) {
+    echo html_writer::tag('div', "", array('class' => 'clear'));
+    echo html_writer::end_tag('div');
+    echo '</br>';
+}
 if ($upcomingsession || $upcomingsession == 0 and !$psession) { // Upcoming sessions
     congrea_print_dropdown_form($id, $drodowndisplaymode);
     if ($drodowndisplaymode == 1 || $drodowndisplaymode == 0 and !$psession) { // Get 7 session.
@@ -606,5 +609,4 @@ if ($upcomingsession || $upcomingsession == 0 and !$psession) { // Upcoming sess
         congrea_get_records($congrea, 90);
     }
 }
-
 echo $OUTPUT->footer();
