@@ -54,15 +54,7 @@ function poll_save($valparams)
             $question->createdby = $userid;
             $question->timecreated = time();
             $questionid = $DB->insert_record('congrea_poll', $question);
-            //$username = $DB->get_field('user', 'username', array('id' => $userid));
-            $userdeatils = $DB->get_record('user', array('id' => $userid));
-            if (!empty($userdeatils)) {
-                $userfullname = $userdeatils->firstname . ' ' . $userdeatils->lastname; // Todo-for function.
-                $username = $userdeatils->username;
-            } else {
-                $userfullname = get_string('nouser', 'mod_congrea');
-                $username = get_string('nouser', 'mod_congrea');
-            }
+            $username = $DB->get_field('user', 'username', array('id' => $userid));
             if ($questionid) {
                 foreach ($datatosave->options as $optiondata) {
                     $options = new stdClass();
@@ -79,7 +71,6 @@ function poll_save($valparams)
             $obj->category = $datatosave->category; // To do.
             $obj->options = $responsearray;
             $obj->creatorname = $username;
-            $obj->creatorfullname = $userfullname;
             $obj->copied = $datatosave->copied;
             echo json_encode($obj);
         } else {
@@ -140,7 +131,15 @@ function poll_data_retrieve($valparams)
         $questiondata = $DB->get_records('congrea_poll', array('courseid' => $category));
         if ($questiondata) {
             foreach ($questiondata as $data) {
-                $username = $DB->get_field('user', 'username', array('id' => $data->createdby));
+                //$username = $DB->get_field('user', 'username', array('id' => $data->createdby));
+                $userdeatils = $DB->get_record('user', array('id' => $data->createdby));
+                if (!empty($userdeatils)) {
+                    $userfullname = $userdeatils->firstname . ' ' . $userdeatils->lastname; // Todo-for function.
+                    $username = $userdeatils->username;
+                } else {
+                    $userfullname = get_string('nouser', 'mod_congrea');
+                    $username = get_string('nouser', 'mod_congrea');
+                }
                 $result = $DB->record_exists('congrea_poll_attempts', array('qid' => $data->id));
                 $sql = "SELECT id, options from {congrea_poll_question_option} where qid = $data->id";
                 $optiondata = $DB->get_records_sql($sql);
@@ -157,6 +156,7 @@ function poll_data_retrieve($valparams)
                     'questiontext' => $data->pollquestion,
                     'options' => $optiondata,
                     'creatorname' => $username,
+                    'creatorfname' => $userfullname,
                     'isPublished' => $result
                 );
                 $responsearray[] = $polllist;
