@@ -24,7 +24,7 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-/***********************Congrea Poll*******************/
+/* * *********************Congrea Poll****************** */
 
 /**
  * Save Congrea poll
@@ -33,8 +33,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param array $valparams
  * @return json for publishing poll
  */
-function poll_save($valparams)
-{
+function poll_save($valparams) {
     global $DB;
     if (!empty($valparams)) {
         $responsearray = array();
@@ -88,8 +87,7 @@ function poll_save($valparams)
  * @param array $valparams
  * @return bool true if successful otherwise false
  */
-function poll_option_drop($valparams)
-{
+function poll_option_drop($valparams) {
     global $DB;
     list($postdata) = $valparams;
     if (!empty($postdata)) {
@@ -114,8 +112,7 @@ function poll_option_drop($valparams)
  * @param array $valparams
  * @return json
  */
-function poll_data_retrieve($valparams)
-{
+function poll_data_retrieve($valparams) {
     global $DB;
     list($postdata) = $valparams;
     if (!empty($postdata)) {
@@ -131,7 +128,6 @@ function poll_data_retrieve($valparams)
         $questiondata = $DB->get_records('congrea_poll', array('courseid' => $category));
         if ($questiondata) {
             foreach ($questiondata as $data) {
-                //$username = $DB->get_field('user', 'username', array('id' => $data->createdby));
                 $userdeatils = $DB->get_record('user', array('id' => $data->createdby));
                 if (!empty($userdeatils)) {
                     $userfullname = $userdeatils->firstname . ' ' . $userdeatils->lastname; // Todo-for function.
@@ -178,7 +174,6 @@ function poll_data_retrieve($valparams)
     }
 }
 
-
 /**
  * Delete Congrea poll
  * serving for virtual class
@@ -186,8 +181,7 @@ function poll_data_retrieve($valparams)
  * @param array $valparams
  * @return int 0 ensures site poll otherwise course poll
  */
-function poll_delete($valparams)
-{
+function poll_delete($valparams) {
     global $DB;
     if (!empty($valparams)) {
         list($postdata) = $valparams;
@@ -197,11 +191,7 @@ function poll_delete($valparams)
             $pollcategory = $DB->get_record_sql("SELECT courseid, instanceid FROM {congrea_poll} WHERE id = $id");
             if ($pollcategory->courseid) { // Category is not zero.
                 $cm = get_coursemodule_from_instance(
-                    'congrea',
-                    $pollcategory->instanceid,
-                    $pollcategory->courseid,
-                    false,
-                    MUST_EXIST
+                        'congrea', $pollcategory->instanceid, $pollcategory->courseid, false, MUST_EXIST
                 );
                 $category = $cm->id;
             } else {
@@ -226,8 +216,7 @@ function poll_delete($valparams)
  * @param array $valparams
  * @return json
  */
-function poll_update($valparams)
-{
+function poll_update($valparams) {
     global $DB;
     list($postdata) = $valparams;
     if (!empty($postdata)) {
@@ -242,7 +231,7 @@ function poll_update($valparams)
             $category = 0;
         }
         $quesiontext = $DB->execute("UPDATE {congrea_poll} "
-            . "SET pollquestion = '" . $data->question . "' WHERE id = '" . $data->questionid . "'");
+                . "SET pollquestion = '" . $data->question . "' WHERE id = '" . $data->questionid . "'");
         if ($quesiontext) {
             foreach ($data->options as $key => $value) {
                 $newoptions = new stdClass();
@@ -278,8 +267,7 @@ function poll_update($valparams)
  * @param array $valparams
  * @return int ensures which type of poll(course poll, site poll) is attemted by users, 0 specify site poll otherwise course poll.
  */
-function poll_result($valparams)
-{
+function poll_result($valparams) {
     global $DB;
     list($postdata) = $valparams;
     if (!empty($postdata)) {
@@ -289,11 +277,7 @@ function poll_result($valparams)
             $pollcategory = $DB->get_record_sql("SELECT courseid, instanceid FROM {congrea_poll} WHERE id = $data->qid");
             if ($pollcategory->courseid) { // Category is not zero.
                 $cm = get_coursemodule_from_instance(
-                    'congrea',
-                    $pollcategory->instanceid,
-                    $pollcategory->courseid,
-                    false,
-                    MUST_EXIST
+                        'congrea', $pollcategory->instanceid, $pollcategory->courseid, false, MUST_EXIST
                 );
                 $category = $cm->id;
             } else {
@@ -326,8 +310,7 @@ function poll_result($valparams)
  * @param int $data
  * @return array of user records
  */
-function congrea_get_enrolled_users($data)
-{
+function congrea_get_enrolled_users($data) {
     global $DB, $OUTPUT, $CFG;
     if (!empty($data)) {
         list($cmid) = $data;
@@ -363,12 +346,7 @@ function congrea_get_enrolled_users($data)
                     $name = $userdata->firstname . ' ' . $userdata->lastname;
                     if ($userdata->picture) { // Check user picture is available or not.
                         $userpicture = moodle_url::make_pluginfile_url(
-                            context_user::instance($userdata->id)->id,
-                            'user',
-                            'icon',
-                            null,
-                            '/',
-                            'f2'
+                                        context_user::instance($userdata->id)->id, 'user', 'icon', null, '/', 'f2'
                         );
                         $src = $userpicture->out(false);
                     } else {
@@ -393,7 +371,7 @@ function congrea_get_enrolled_users($data)
     }
 }
 
-/********************** Quiz functions*******************/
+/* * ******************** Quiz functions****************** */
 
 /**
  * Get all quizes with the details (timelimit, ques per page)
@@ -402,16 +380,12 @@ function congrea_get_enrolled_users($data)
  * @param array $valparams
  * @return json quizes as an array of object
  */
-function congrea_quiz($valparams)
-{
+function congrea_quiz($valparams) {
     global $DB, $CFG;
     list($postdata) = $valparams;
     $cm = get_coursemodule_from_id('congrea', $postdata['cmid'], 0, false, MUST_EXIST);
     $quizes = $DB->get_records(
-        'quiz',
-        array('course' => $cm->course),
-        null,
-        'id, name, course, timelimit, preferredbehaviour, questionsperpage'
+            'quiz', array('course' => $cm->course), null, 'id, name, course, timelimit, preferredbehaviour, questionsperpage'
     );
     if ($quizes) {
         foreach ($quizes as $data) {
@@ -422,18 +396,17 @@ function congrea_quiz($valparams)
                     $quizstatus = 0;
                     if ($CFG->version >= 2016120500) { // Compare with moodle32 version.
                         $quizstatus = $DB->get_field(
-                            'course_modules',
-                            'deletioninprogress',
-                            array('id' => $quizcm->id, 'instance' => $data->id, 'course' => $data->course)
+                                'course_modules', 'deletioninprogress',
+                                array('id' => $quizcm->id, 'instance' => $data->id, 'course' => $data->course)
                         );
                     }
                     $quizdata[$data->id] = (object) array(
-                        'id' => $data->id,
-                        'name' => $data->name,
-                        'timelimit' => $data->timelimit,
-                        'preferredbehaviour' => $data->preferredbehaviour,
-                        'questionsperpage' => $data->questionsperpage,
-                        'quizstatus' => $quizstatus
+                                'id' => $data->id,
+                                'name' => $data->name,
+                                'timelimit' => $data->timelimit,
+                                'preferredbehaviour' => $data->preferredbehaviour,
+                                'questionsperpage' => $data->questionsperpage,
+                                'quizstatus' => $quizstatus
                     );
                 }
             }
@@ -456,8 +429,7 @@ function congrea_quiz($valparams)
  * @param string $type
  * @return boolean
  */
-function congrea_question_type($quizid, $type = 'multichoice')
-{
+function congrea_question_type($quizid, $type = 'multichoice') {
     global $DB;
     $sql = "SELECT qs.questionid, q.qtype
                 FROM {quiz_slots} qs
@@ -482,8 +454,7 @@ function congrea_question_type($quizid, $type = 'multichoice')
  * @param array $valparams
  * @return boolean
  */
-function congrea_add_quiz($valparams)
-{
+function congrea_add_quiz($valparams) {
     global $DB;
     list($postdata) = $valparams;
     $cm = get_coursemodule_from_id('congrea', $postdata['cmid'], 0, false, MUST_EXIST);
@@ -510,8 +481,7 @@ function congrea_add_quiz($valparams)
  * @param array $valparams
  * @return boolean
  */
-function congrea_quiz_result($valparams)
-{
+function congrea_quiz_result($valparams) {
     global $DB;
     list($postdata) = $valparams;
     $cm = get_coursemodule_from_id('congrea', $postdata['cmid'], 0, false, MUST_EXIST);
@@ -533,6 +503,7 @@ function congrea_quiz_result($valparams)
         }
     }
 }
+
 /**
  * function to get file path
  * serving for virtual class
@@ -542,8 +513,7 @@ function congrea_quiz_result($valparams)
  * @param array $options
  * @return bool false if file not found, does not return if found - justsend the file
  */
-function congrea_file_path($args, $forcedownload, $options)
-{
+function congrea_file_path($args, $forcedownload, $options) {
     global $DB;
     $options = array('preview' => $options);
     $fs = get_file_storage();
@@ -577,14 +547,7 @@ function congrea_file_path($args, $forcedownload, $options)
  * @return string the processed text.
  */
 function congrea_file_rewrite_pluginfile_urls(
-    $text,
-    $file,
-    $contextid,
-    $component,
-    $filearea,
-    $itemid,
-    $filename,
-    array $options = null
+$text, $file, $contextid, $component, $filearea, $itemid, $filename, array $options = null
 ) {
     global $CFG;
     $options = (array) $options;
@@ -609,7 +572,6 @@ function congrea_file_rewrite_pluginfile_urls(
     return str_replace('@@PLUGINFILE@@/', $replaceurl, $text);
 }
 
-
 /**
  * function to formate text
  * serving for virtual class
@@ -623,8 +585,7 @@ function congrea_file_rewrite_pluginfile_urls(
  * @param int $itemid helps identify the file area.
  * @return string
  */
-function congrea_formate_text($cmid, $questiondata, $text, $formate, $component, $filearea, $itemid)
-{
+function congrea_formate_text($cmid, $questiondata, $text, $formate, $component, $filearea, $itemid) {
     global $PAGE, $DB;
 
     $context = context_module::instance($cmid);
@@ -638,13 +599,7 @@ function congrea_formate_text($cmid, $questiondata, $text, $formate, $component,
             $filename = $matches[1];
             $f = 'mod/congrea/pluginfile.php';
             $contents = congrea_file_rewrite_pluginfile_urls(
-                $text,
-                $f,
-                $questiondata->contextid,
-                $component,
-                $filearea,
-                $itemid,
-                $filename
+                    $text, $f, $questiondata->contextid, $component, $filearea, $itemid, $filename
             );
             return congrea_make_html_inline($contents);
         } else {
@@ -662,8 +617,7 @@ function congrea_formate_text($cmid, $questiondata, $text, $formate, $component,
  * @param string $html
  * @return string
  */
-function congrea_make_html_inline($html)
-{
+function congrea_make_html_inline($html) {
     $html = preg_replace('~\s*<p>\s*~u', '', $html);
     $html = preg_replace('~\s*</p>\s*~u', '<br />', $html);
     $html = preg_replace('~(<br\s*/?>)+$~u', '', $html);
@@ -677,8 +631,7 @@ function congrea_make_html_inline($html)
  * @param array $valparams array of quizid, cmid
  * @return quiz json
  */
-function congrea_get_quizdata($valparams)
-{
+function congrea_get_quizdata($valparams) {
     global $CFG, $DB;
     list($postdata) = $valparams;
     if (empty($postdata) || !is_array($postdata)) {
@@ -728,30 +681,21 @@ function congrea_get_quizdata($valparams)
                         $correct = $ans->fraction > 0 ? true : false;
                     }
                     $answer = congrea_formate_text(
-                        $cm->id,
-                        $questiondata,
-                        $ans->answer,
-                        $ans->answerformat,
-                        'question',
-                        'answer',
-                        $ans->id
+                            $cm->id, $questiondata, $ans->answer, $ans->answerformat, 'question', 'answer', $ans->id
                     );
                     $options[] = array("option" => $answer, "correct" => $correct);
                 }
                 $questiontext = congrea_formate_text(
-                    $cm->id,
-                    $questiondata,
-                    $questiondata->questiontext,
-                    $questiondata->questiontextformat,
-                    'question',
-                    'questiontext',
-                    $questiondata->id
+                        $cm->id, $questiondata, $questiondata->questiontext,
+                        $questiondata->questiontextformat, 'question', 'questiontext', $questiondata->id
                 );
                 $questions[] = array(
                     "q" => $questiontext, "a" => $options,
                     "qid" => $questiondata->id,
-                    "correct" => !empty($questiondata->options->correctfeedback) ? $questiondata->options->correctfeedback : "Your answer is correct.",
-                    "incorrect" => !empty($questiondata->options->incorrectfeedback) ? $questiondata->options->incorrectfeedback : "Your answer is incorrect.",
+                    "correct" => !empty($questiondata->options->correctfeedback) ?
+                    $questiondata->options->correctfeedback : "Your answer is correct.",
+                    "incorrect" => !empty($questiondata->options->incorrectfeedback) ?
+                    $questiondata->options->incorrectfeedback : "Your answer is incorrect.",
                     "select_any" => $selectany,
                     "force_checkbox" => $forcecheckbox
                 );

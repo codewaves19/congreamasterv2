@@ -36,8 +36,7 @@ defined('MOODLE_INTERNAL') || die();
  * @param int $oldversion
  * @return bool
  */
-function xmldb_congrea_upgrade($oldversion)
-{
+function xmldb_congrea_upgrade($oldversion) {
     global $DB, $CFG;
 
     require_once($CFG->libdir . '/db/upgradelib.php');
@@ -174,9 +173,9 @@ function xmldb_congrea_upgrade($oldversion)
                         $congreapoll->timecreated = $data->timecreated;
                         if ($pollid = $DB->insert_record('congrea_poll', $congreapoll)) {
                             $DB->execute("UPDATE {congrea_poll_question_option} "
-                                . "SET qid = '" . $pollid . "' WHERE qid = '" . $data->id . "'");
+                                    . "SET qid = '" . $pollid . "' WHERE qid = '" . $data->id . "'");
                             $DB->execute("UPDATE {congrea_poll_attempts} "
-                                . "SET qid = '" . $pollid . "' WHERE qid = '" . $data->id . "'");
+                                    . "SET qid = '" . $pollid . "' WHERE qid = '" . $data->id . "'");
                         }
                     }
                 }
@@ -201,182 +200,93 @@ function xmldb_congrea_upgrade($oldversion)
         $table = new xmldb_table('congrea');
         // Add disable attendee audio field Default 0.
         $field = new xmldb_field(
-            'studentaudio',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            1,
-            'closetime'
+                'studentaudio', XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 1, 'closetime'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         // Add disable attendee video field Default 0.
         $field = new xmldb_field(
-            'studentvideo',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            1,
-            'studentaudio'
+                'studentvideo', XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 1, 'studentaudio'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         // Add disable attendee private chat field Default 0.
         $field = new xmldb_field(
-            'studentpc',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            1,
-            'studentvideo'
+                'studentpc', XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 1, 'studentvideo'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         // Add disable attendee group chat field Default 0.
         $field = new xmldb_field(
-            'studentgc',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            1,
-            'studentpc'
+                'studentgc', XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 1, 'studentpc'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         // Add disable raise hand field Default 1.
         $field = new xmldb_field(
-            'raisehand',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            1,
-            'studentgc'
+                'raisehand', XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 1, 'studentgc'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         // Add disable user list field Default 1.
         $field = new xmldb_field(
-            'userlist',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            1,
-            'raisehand'
+                'userlist', XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 1, 'raisehand'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         // Add enable recording field Default 0.
         $field = new xmldb_field(
-            'enablerecording',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            0,
-            'userlist'
+                'enablerecording', XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'userlist'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         // Add rec allow presentor av control field Default 1.
         $field = new xmldb_field(
-            'recallowpresentoravcontrol',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            1,
-            'enablerecording'
+                'recallowpresentoravcontrol', XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 1, 'enablerecording'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         // Add show presentor recording status field Default 1.
         $field = new xmldb_field(
-            'showpresentorrecordingstatus',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            1,
-            'recallowpresentoravcontrol'
+                'showpresentorrecordingstatus',
+                XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 1, 'recallowpresentoravcontrol'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         // Add rec disable attendee av field Default 0.
         $field = new xmldb_field(
-            'recattendeeav',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            1,
-            'showpresentorrecordingstatus'
+                'recattendeeav', XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 1, 'showpresentorrecordingstatus'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         // Add rec allow attendee av control field Default 0.
         $field = new xmldb_field(
-            'recallowattendeeavcontrol',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            0,
-            'recattendeeav'
+                'recallowattendeeavcontrol', XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'recattendeeav'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         // Add show attendee recording status field Default 0.
         $field = new xmldb_field(
-            'showattendeerecordingstatus',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            0,
-            'recallowattendeeavcontrol'
+                'showattendeerecordingstatus',
+                XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'recallowattendeeavcontrol'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
         // Add trim recordings field Default 0.
         $field = new xmldb_field(
-            'trimrecordings',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            1,
-            'showattendeerecordingstatus'
+                'trimrecordings', XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 1, 'showattendeerecordingstatus'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
@@ -386,14 +296,7 @@ function xmldb_congrea_upgrade($oldversion)
     if ($oldversion < 2019061702) {
         $table = new xmldb_table('congrea');
         $field = new xmldb_field(
-            'attendeerecording',
-            XMLDB_TYPE_INTEGER,
-            10,
-            XMLDB_UNSIGNED,
-            XMLDB_NOTNULL,
-            null,
-            1,
-            'recattendeeav'
+                'attendeerecording', XMLDB_TYPE_INTEGER, 10, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 1, 'recattendeeav'
         );
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
@@ -420,7 +323,7 @@ function xmldb_congrea_upgrade($oldversion)
                 if (!empty($congreadata)) {
                     foreach ($congreadata as $data) {
                         $congreaold = new stdClass();
-                        $congreaold->starttime = time(); // Giving present time to start till 24 hours. 
+                        $congreaold->starttime = time(); // Giving present time to start till 24 hours.
                         $enddate = strtotime(date('Y-m-d H:i:s', strtotime("+1440 minutes", $congreaold->starttime)));
                         $congreaold->endtime = $enddate;
                         $congreaold->timeduration = round((abs($congreaold->endtime - $congreaold->starttime) / 60));

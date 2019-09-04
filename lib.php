@@ -95,7 +95,6 @@ function congrea_add_instance($congrea) {
     }
     $vclass = $DB->insert_record('congrea', $congrea);
     $congrea->id = $vclass;
-    //mod_congrea_update_calendar($congrea);
     return $vclass;
 }
 
@@ -151,7 +150,6 @@ function congrea_update_instance($congrea, $mform = null) {
         $congrea->showattendeerecordingstatus = 1;
     }
     $status = $DB->update_record('congrea', $congrea);
-    //mod_congrea_update_calendar($congrea);
     return $status;
 }
 
@@ -262,6 +260,7 @@ function congrea_update_grades(stdClass $congrea, $userid = 0) {
 
     grade_update('mod/congrea', $congrea->course, 'mod', 'congrea', $congrea->id, 0, $grades);
 }
+
 /**
  * Returns the lists of all browsable file areas within the given module context
  *

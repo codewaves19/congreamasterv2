@@ -30,7 +30,6 @@ require_once(dirname(__FILE__) . '/locallib.php');
 require_once(dirname(__FILE__) . '/session_form.php');
 
 $id = optional_param('id', 0, PARAM_INT); // Course_module ID.
-//echo $id; exit;
 $n = optional_param('n', 0, PARAM_INT); // Congrea instance ID - it should be named as the first character of the module.
 $sessionsettings = optional_param('sessionsettings', 0, PARAM_INT);
 $edit = optional_param('edit', 0, PARAM_INT);
@@ -62,7 +61,7 @@ if ($mform->is_cancelled()) {
     $data->starttime = $fromform->fromsessiondate;
     $durationinminutes = $fromform->timeduration / 60;
     $expecteddate = strtotime(date('Y-m-d H:i:s', strtotime("+$durationinminutes minutes", $data->starttime)));
-    $data->endtime =  $expecteddate;
+    $data->endtime = $expecteddate;
     $timeduration = round((abs($data->endtime - $data->starttime) / 60));
     $data->timeduration = $timeduration;
     if (!empty($fromform->addmultiply)) {
@@ -87,20 +86,21 @@ if ($mform->is_cancelled()) {
     $data->congreaid = $congrea->id;
     $exist = $DB->get_field('congrea_sessions', 'congreaid', array('congreaid' => $congrea->id));
     if (!$exist) {
-        $sessionid = $DB->insert_record('congrea_sessions', $data); // insert record in congrea table.
+        $sessionid = $DB->insert_record('congrea_sessions', $data); // Insert record in congrea table.
         mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration);
     } else if ($edit) {
-        $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id)); // By this delete all repeat session.
+        $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id));
         $sessionid = $edit;
-        $data->id =  $edit;
+        $data->id = $edit;
         $DB->update_record('congrea_sessions', $data);
         mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration);
     }
     if (!empty($fromform->addmultiply)) {
         if ($fromform->period > 0) { // Here need to calculate repeate dates.
-            $params = array('modulename' => 'congrea', 'instance' => $congrea->id); // create multiple.
+            $params = array('modulename' => 'congrea', 'instance' => $congrea->id); // Create multiple.
             $eventid = $DB->get_field('event', 'id', $params);
-            $expecteddate = date('Y-m-d H:i:s', strtotime(date('Y-m-d H:i:s', $fromform->fromsessiondate) . "+$fromform->period weeks"));
+            $expecteddate = date('Y-m-d H:i:s',
+                    strtotime(date('Y-m-d H:i:s', $fromform->fromsessiondate) . "+$fromform->period weeks"));
             $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $expecteddate, $data->additional);
             foreach ($datelist as $startdate) {
                 repeat_calendar($congrea, $eventid, $startdate, $sessionid, $timeduration);
@@ -124,7 +124,7 @@ if (!empty($sessionlist)) {
     foreach ($sessionlist as $list) {
         $row = array();
         $row[] = userdate($list->starttime);
-        $row[] = $list->timeduration. ' '.'Minutes';
+        $row[] = $list->timeduration . ' ' . 'Minutes';
         $teachername = $DB->get_record('user', array('id' => $list->teacherid));
         if (!empty($teachername)) {
             $username = $teachername->firstname . ' ' . $teachername->lastname; // Todo-for function.
@@ -132,16 +132,17 @@ if (!empty($sessionlist)) {
             $username = get_string('nouser', 'mod_congrea');
         }
         $row[] = $username;
-        if(!empty($list->repeattype)) {
+        if (!empty($list->repeattype)) {
             $row[] = 'Weekly';
         } else {
             $row[] = 'none';
         }
-        $row[] = str_replace('"', '', $list->additional);;
+        $row[] = str_replace('"', '', $list->additional);
+        ;
         $row[] = html_writer::link(
-            new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'edit' => $list->id, 'sessionsettings' => $sessionsettings)),
-            'Edit',
-            array('class' => 'actionlink exportpage')
+                        new moodle_url('/mod/congrea/sessionsettings.php',
+                                array('id' => $cm->id, 'edit' => $list->id, 'sessionsettings' => $sessionsettings)),
+                'Edit', array('class' => 'actionlink exportpage')
         );
         $table->data[] = $row;
     }
@@ -153,7 +154,7 @@ if (!empty($sessionlist)) {
         echo 'no session';
     }
 } else {
-    echo 'No any sessions are available'; // todo- by get_string. 
+    echo 'No any sessions are available'; // Todo- by get_string.
 }
 if ($edit) {
     $list = $DB->get_records('congrea_sessions', array('id' => $edit));
