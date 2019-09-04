@@ -25,7 +25,6 @@ require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 require_once(dirname(__FILE__) . '/lib.php');
 require_once(dirname(__FILE__) . '/locallib.php');
 require_once($CFG->dirroot . '/calendar/lib.php');
-require_once(dirname(__FILE__) . '/dropdown_form.php');
 
 $id = optional_param('id', 0, PARAM_INT); // Course_module ID.
 $report = optional_param('report', 0, PARAM_INT); // Course_module ID.
