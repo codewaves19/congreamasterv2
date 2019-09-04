@@ -414,23 +414,23 @@ function xmldb_congrea_upgrade($oldversion)
         $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
         if (!$dbman->table_exists($table)) {
             $dbman->create_table($table);
-        }
-        $table = new xmldb_table('congrea');
-        if ($dbman->table_exists($table)) {
-            $congreadata = $DB->get_records('congrea');
-            if (!empty($congreadata)) {
-                foreach ($congreadata as $data) {
-                    $congreaold = new stdClass();
-                    $congreaold->starttime = time(); // Giving present time to start till 24 hours. 
-                    $enddate = strtotime(date('Y-m-d H:i:s', strtotime("+1440 minutes", $congreaold->starttime)));
-                    $congreaold->endtime = $enddate;
-                    $congreaold->timeduration = round((abs($congreaold->endtime - $congreaold->starttime) / 60));
-                    $congreaold->isrepeat = 0;
-                    $congreaold->repeattype = 0;
-                    $congreaold->additional = 0;
-                    $congreaold->teacherid = $data->moderatorid;
-                    $congreaold->congreaid = $data->id;
-                    $DB->insert_record('congrea_sessions', $congreaold);
+            $table = new xmldb_table('congrea');
+            if ($dbman->table_exists($table)) {
+                $congreadata = $DB->get_records('congrea');
+                if (!empty($congreadata)) {
+                    foreach ($congreadata as $data) {
+                        $congreaold = new stdClass();
+                        $congreaold->starttime = time(); // Giving present time to start till 24 hours. 
+                        $enddate = strtotime(date('Y-m-d H:i:s', strtotime("+1440 minutes", $congreaold->starttime)));
+                        $congreaold->endtime = $enddate;
+                        $congreaold->timeduration = round((abs($congreaold->endtime - $congreaold->starttime) / 60));
+                        $congreaold->isrepeat = 0;
+                        $congreaold->repeattype = 0;
+                        $congreaold->additional = 0;
+                        $congreaold->teacherid = $data->moderatorid;
+                        $congreaold->congreaid = $data->id;
+                        $DB->insert_record('congrea_sessions', $congreaold);
+                    }
                 }
             }
         }
