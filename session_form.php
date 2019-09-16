@@ -46,6 +46,9 @@ class mod_congrea_session_form extends moodleform {
         $id = $this->_customdata['id'];
         $sessionsettings = $this->_customdata['sessionsettings'];
         $edit = $this->_customdata['edit'];
+        $action = $this->_customdata['action'];
+        $congreaid = $this->_customdata['congreaid'];
+        //$editconflict = $this->_customdata['editconflict'];
 
         $mform->addElement('hidden', 'sessionsettings', $sessionsettings);
         $mform->setType('sessionsettings', PARAM_INT);
@@ -53,7 +56,13 @@ class mod_congrea_session_form extends moodleform {
         $mform->setType('id', PARAM_INT);
         $mform->addElement('hidden', 'edit', $edit);
         $mform->setType('edit', PARAM_INT);
+        $mform->addElement('hidden', 'action', $action);
+        $mform->setType('action', PARAM_CLEANHTML);
         $mform->addElement('header', 'sessionsheader', get_string('sessionsettings', 'mod_congrea'));
+        $mform->setType('congreaid', PARAM_INT);
+        $mform->addElement('hidden', 'congreaid', $congreaid);
+        //$mform->setType('editconflict', PARAM_INT);
+        //$mform->addElement('hidden', 'editconflict', $congreaid);
 
         $mform->addElement('date_time_selector', 'fromsessiondate', get_string('fromsessiondate', 'congrea'));
         $mform->addHelpButton('fromsessiondate', 'fromsessiondate', 'congrea');
@@ -96,6 +105,8 @@ class mod_congrea_session_form extends moodleform {
      * @return array errors
      */
     public function validation($data, $files) {
+        global $DB;
+        //echo '<pre>'; print_r($data); exit;
         $errors = parent::validation($data, $files);
         if (!empty($data['period']) && $data['period'] > 0 && empty($data['days'])) {
             $errors['days'] = get_string('selectdays', 'congrea');
@@ -114,6 +125,33 @@ class mod_congrea_session_form extends moodleform {
         }
         if ($durationinminutes > 1440) { // Minutes of 24 hours.
             $errors['timeduration'] = get_string('errortimeduration', 'congrea');
+        }
+        $starttime = date("Y-m-d H:i:s", $data['fromsessiondate']);
+        $endtime = strtotime(date('Y-m-d H:i:s', strtotime("+$durationinminutes minutes", strtotime($starttime))));
+        if (!empty($data['days'])) {
+            $prefix = $daylist = '';
+            foreach ($data['days'] as $keys => $daysname) {
+                $daylist .= $prefix . '"' . $keys . '"';
+                $prefix = ', ';
+            }
+            $additional = $daylist;
+        } else {
+            $additional = 'none';
+        }
+        if(!empty($data['period'])) {
+            $repeat = $data['period'];
+        } else {
+            $repeat = 0;
+        }
+        //echo $additional; exit;
+        // if(!empty($data['edit'])) {
+        //     $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $edit));
+        //     $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $edit));
+
+        // }
+        $conflictstatus = check_conflicts($data['congreaid'], $data['fromsessiondate'], $endtime,  $repeat, $additional, $durationinminutes);
+        if($conflictstatus) {
+            $errors['fromsessiondate'] = get_string('conflictsdate', 'congrea');
         }
         return $errors;
     }

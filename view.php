@@ -50,46 +50,71 @@ if ($id) {
 } else {
     print_error('You must specify a course_module ID or an instance ID');
 }
+
 $sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id));
-if (!empty($sessionlist)) {
-    foreach ($sessionlist as $list) {
-        $starttime = $list->starttime;
-        $endtime = $list->endtime;
-        $teacherid = $list->teacherid;
-        if (!empty($list->repeattype)) {
-            $repeat = $list->repeattype;
-        } else {
-            $repeat = 0;
-        }
-        $duration = $list->timeduration;
-    }
-} else {
+if(empty($sessionlist)) {
     redirect(new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true)));
 }
-
-if (!empty($repeat)) { // Repeat dates.
     $time = time();
-    $sql = "SELECT timestart from {event}"
-            . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time ORDER BY timestart ASC";
-    $optiondata = $DB->get_records_sql($sql);
-    if (!empty($optiondata)) {
-        $repeattimestart = array_key_first($optiondata);
-        $starttime = date("Y-m-d H:i:s", $repeattimestart);
-        $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)));
-        $repeattimeend = strtotime($endtime);
-    } else {
-        $repeattimestart = $starttime;
-        $repeattimeend = $endtime;
-    }
-}
+    $sql = "SELECT timestart, timeduration, userid from {event}"
+            . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time ORDER BY timestart DESC LIMIT 1";
+    // $sql = "SELECT timestart, timeduration, userid from {event}"
+    // . " where instance = $congrea->id and modulename = 'congrea' and $time >= timestart ORDER BY timestart DESC LIMIT 1";
 
-if (empty($repeat)) {
-    $sessionendtime = $endtime;
-    $sessionstarttime = $starttime;
-} else {
-    $sessionendtime = $repeattimeend;
-    $sessionstarttime = $repeattimestart;
-}
+    $optiondata = $DB->get_records_sql($sql);
+    //echo '<pre>'; print_r($optiondata); exit;
+    if (!empty($optiondata)) {
+        $sessionstarttime = array_key_first($optiondata);
+        $duration =  $optiondata[$sessionstarttime]->timeduration;
+        $teacherid = $optiondata[$sessionstarttime]->userid;
+        $starttime = date("Y-m-d H:i:s", $sessionstarttime);
+        $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)));
+        $sessionendtime = strtotime($endtime);
+    } else { // Todo.
+        $sessionstarttime = $starttime;
+        $sessionendtime = $endtime;
+    }
+
+// if (!empty($repeat)) { // Repeat dates.
+//     $time = time();
+//     $sql = "SELECT timestart from {event}"
+//             . " where instance = $congrea->id and modulename = 'congrea' ORDER BY timestart ASC";
+//     $optiondata = $DB->get_records_sql($sql);
+//     echo '<pre>'; print_r($optiondata); exit;
+//     if (!empty($optiondata)) {
+//         $repeattimestart = array_key_first($optiondata);
+//         $starttime = date("Y-m-d H:i:s", $repeattimestart);
+//         $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)));
+//         $repeattimeend = strtotime($endtime);
+//     } else {
+//         $repeattimestart = $starttime;
+//         $repeattimeend = $endtime;
+//     }
+// }
+
+// if (!empty($repeat)) { // Repeat dates.
+//     $time = time();
+//     $sql = "SELECT timestart from {event}"
+//             . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time ORDER BY timestart ASC";
+//     $optiondata = $DB->get_records_sql($sql);
+//     if (!empty($optiondata)) {
+//         $repeattimestart = array_key_first($optiondata);
+//         $starttime = date("Y-m-d H:i:s", $repeattimestart);
+//         $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)));
+//         $repeattimeend = strtotime($endtime);
+//     } else {
+//         $repeattimestart = $starttime;
+//         $repeattimeend = $endtime;
+//     }
+// }
+
+// if (empty($repeat)) {
+//     $sessionendtime = $endtime;
+//     $sessionstarttime = $starttime;
+// } else {
+//     $sessionendtime = $repeattimeend;
+//     $sessionstarttime = $repeattimestart;
+// }
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 

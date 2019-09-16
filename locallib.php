@@ -36,7 +36,8 @@ define('NEXT_3_MONTH', 3);
  *
  * @return object
  */
-function congrea_course_teacher_list() {
+function congrea_course_teacher_list()
+{
     global $COURSE;
 
     $courseid = $COURSE->id;
@@ -77,10 +78,25 @@ function congrea_course_teacher_list() {
  * @return string
  */
 function congrea_online_server(
-$url, $authusername, $authpassword, $role, $rid,
-        $room, $upload, $down, $debug = false, $cgcolor, $webapi,
-        $userpicturesrc, $fromcms, $licensekey, $audiostatus,
-        $videostatus, $recording = false, $hexcode, $joinbutton = false
+    $url,
+    $authusername,
+    $authpassword,
+    $role,
+    $rid,
+    $room,
+    $upload,
+    $down,
+    $debug = false,
+    $cgcolor,
+    $webapi,
+    $userpicturesrc,
+    $fromcms,
+    $licensekey,
+    $audiostatus,
+    $videostatus,
+    $recording = false,
+    $hexcode,
+    $joinbutton = false
 ) {
     global $USER;
     $username = $USER->firstname . ' ' . $USER->lastname;
@@ -108,8 +124,8 @@ $url, $authusername, $authpassword, $role, $rid,
     $form .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'settings', 'value' => $hexcode));
     if (!$joinbutton) {
         $form .= html_writer::empty_tag('input', array(
-                    'type' => 'submit', 'name' => 'submit', 'class' => 'vcbutton',
-                    'value' => get_string('joinroom', 'congrea')
+            'type' => 'submit', 'name' => 'submit', 'class' => 'vcbutton',
+            'value' => get_string('joinroom', 'congrea')
         ));
     }
     $form .= html_writer::end_tag('form');
@@ -142,15 +158,30 @@ $url, $authusername, $authpassword, $role, $rid,
  * @return string
  */
 function congrea_online_server_play(
-$url, $authusername, $authpassword, $role, $rid, $room, $upload, $down,
-        $debug = false, $cgcolor, $webapi, $userpicturesrc, $licensekey,
-        $id, $vcsid, $recordingsession = false, $recording = false, $hexcode
+    $url,
+    $authusername,
+    $authpassword,
+    $role,
+    $rid,
+    $room,
+    $upload,
+    $down,
+    $debug = false,
+    $cgcolor,
+    $webapi,
+    $userpicturesrc,
+    $licensekey,
+    $id,
+    $vcsid,
+    $recordingsession = false,
+    $recording = false,
+    $hexcode
 ) {
     global $USER;
     $username = $USER->firstname . ' ' . $USER->lastname;
     $form = html_writer::start_tag('form', array(
-                'id' => 'playRec' . $vcsid, 'class' => 'playAct',
-                'action' => $url, 'method' => 'post'
+        'id' => 'playRec' . $vcsid, 'class' => 'playAct',
+        'action' => $url, 'method' => 'post'
     ));
     $form .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()));
     $form .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'uid', 'value' => $USER->id));
@@ -175,8 +206,8 @@ $url, $authusername, $authpassword, $role, $rid, $room, $upload, $down,
     $form .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'settings', 'value' => $hexcode));
     $form .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'play', 'value' => 1));
     $form .= html_writer::empty_tag('input', array(
-                'type' => 'submit', 'name' => 'submit', 'class' => 'vcbutton playbtn',
-                'value' => '', 'title' => 'Play'
+        'type' => 'submit', 'name' => 'submit', 'class' => 'vcbutton playbtn',
+        'value' => '', 'title' => 'Play'
     ));
     $form .= html_writer::end_tag('form');
     return $form;
@@ -192,13 +223,12 @@ $url, $authusername, $authpassword, $role, $rid, $room, $upload, $down,
  *
  * @return bool
  */
-function mod_congrea_update_calendar($congrea, $startime, $endtime, $timeduration) {
+function mod_congrea_update_calendar($congrea, $startime, $endtime, $timeduration, $sessionid)
+{
     global $DB, $CFG;
     require_once($CFG->dirroot . '/calendar/lib.php');
-    if ($startime && $endtime > time()) {
+    if ($startime && $endtime) {
         $event = new stdClass();
-        $params = array('modulename' => 'congrea', 'instance' => $congrea->id); // Create multiple.
-        $event->id = $DB->get_field('event', 'id', $params);
         $event->name = $congrea->name;
         $event->timestart = $startime; // Change because of sessionsettings.
         // Convert the links to pluginfile. It is a bit hacky but at this stage the files.
@@ -214,20 +244,16 @@ function mod_congrea_update_calendar($congrea, $startime, $endtime, $timeduratio
             'text' => $intro,
             'format' => $congrea->introformat
         );
-        if ($event->id) {
-            $calendarevent = calendar_event::load($event->id);
-            $calendarevent->update($event);
-        } else {
-            unset($event->id);
-            $event->courseid = $congrea->course;
-            $event->groupid = 0;
-            $event->userid = 0;
-            $event->modulename = 'congrea';
-            $event->instance = $congrea->id;
-            $event->eventtype = 'open';
-            $event->timeduration = $timeduration;
-            calendar_event::create($event);
-        }
+        //unset($event->id);
+        $event->courseid = $congrea->course;
+        $event->groupid = 0;
+        $teacherid = $DB->get_field('congrea_sessions', 'teacherid', array('id' => $sessionid));
+        $event->userid = $teacherid;
+        $event->modulename = 'congrea';
+        $event->instance = $congrea->id;
+        $event->eventtype = $sessionid;
+        $event->timeduration = $timeduration;
+        calendar_event::create($event);
     } else {
         $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id));
     }
@@ -244,7 +270,8 @@ function mod_congrea_update_calendar($congrea, $startime, $endtime, $timeduratio
  *
  * @return bool
  */
-function repeat_calendar($congrea, $eventid, $strattime, $sessionid, $timeduration) {
+function repeat_calendar($congrea, $eventid, $strattime, $sessionid, $timeduration)
+{
     global $DB;
     $event = new stdClass();
     $event->name = $congrea->name;
@@ -257,7 +284,7 @@ function repeat_calendar($congrea, $eventid, $strattime, $sessionid, $timedurati
     $event->repeatid = $eventid;
     $event->modulename = 'congrea';
     $event->instance = $congrea->id;
-    $event->eventtype = 'open';
+    $event->eventtype = $sessionid; // schedule id.
     $event->timeduration = $timeduration;
     calendar_event::create($event);
 }
@@ -270,7 +297,8 @@ function repeat_calendar($congrea, $eventid, $strattime, $sessionid, $timedurati
  * @param boolean $empty
  * @return bool
  */
-function mod_congrea_deleteall($directory, $empty = false) {
+function mod_congrea_deleteall($directory, $empty = false)
+{
     if (substr($directory, -1) == "/") {
         $directory = substr($directory, 0, -1);
     }
@@ -308,7 +336,8 @@ function mod_congrea_deleteall($directory, $empty = false) {
  * @param int $sr The section to link back to (used for creating the links)
  * @return The markup for the rename action, or an empty string if not available.
  */
-function mod_congrea_module_get_rename_action($cm, $instance, $sr = null) {
+function mod_congrea_module_get_rename_action($cm, $instance, $sr = null)
+{
     global $COURSE, $OUTPUT, $USER;
 
     static $str;
@@ -328,15 +357,20 @@ function mod_congrea_module_get_rename_action($cm, $instance, $sr = null) {
     if ($hasmanageactivities) {
         // We will not display link if we are on some other-course page (where we should not see this module anyway).
         return html_writer::span(
-                        html_writer::link(
-                                new moodle_url($baseurl, array('update' => $instance->session, 'sessionname' => $instance->name)),
-                                $OUTPUT->pix_icon('t/editstring', '', 'moodle',
-                                        array('class' => 'iconsmall visibleifjs', 'title' => '')), array(
-                            'class' => 'editing_title',
-                            'data-action' => 'edittitle',
-                            'title' => $str->edittitle,
-                                )
-                        )
+            html_writer::link(
+                new moodle_url($baseurl, array('update' => $instance->session, 'sessionname' => $instance->name)),
+                $OUTPUT->pix_icon(
+                    't/editstring',
+                    '',
+                    'moodle',
+                    array('class' => 'iconsmall visibleifjs', 'title' => '')
+                ),
+                array(
+                    'class' => 'editing_title',
+                    'data-action' => 'edittitle',
+                    'title' => $str->edittitle,
+                )
+            )
         );
     }
     return '';
@@ -348,7 +382,8 @@ function mod_congrea_module_get_rename_action($cm, $instance, $sr = null) {
  * @param int $length - length of random string
  * @return bool
  */
-function mod_congrea_generaterandomstring($length = 11) {
+function mod_congrea_generaterandomstring($length = 11)
+{
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $characterslength = strlen($characters);
     $randomstring = '';
@@ -369,7 +404,8 @@ function mod_congrea_generaterandomstring($length = 11) {
  *
  * @return string $resutl json_encoded object
  */
-function curl_request($url, $postdata, $key, $secret = false) {
+function curl_request($url, $postdata, $key, $secret = false)
+{
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_POST, 1);
@@ -411,7 +447,8 @@ function curl_request($url, $postdata, $key, $secret = false) {
  *
  * @return string $resutl json_encoded object
  */
-function attendence_curl_request($apiurl, $sessionid, $key, $authpass, $authuser, $room, $uid = false) {
+function attendence_curl_request($apiurl, $sessionid, $key, $authpass, $authuser, $room, $uid = false)
+{
     $curl = curl_init();
     $data = json_encode(array('session' => $sessionid, 'uid' => $uid));
     curl_setopt_array($curl, array(
@@ -450,7 +487,8 @@ function attendence_curl_request($apiurl, $sessionid, $key, $authpass, $authuser
  * @param int $courseid
  * @return array of user records
  */
-function congrea_get_enrolled_users($cmid, $courseid) {
+function congrea_get_enrolled_users($cmid, $courseid)
+{
     global $DB, $OUTPUT, $CFG;
     if (!empty($cmid)) {
         if (!$cm = get_coursemodule_from_id('congrea', $cmid)) {
@@ -509,7 +547,8 @@ function congrea_get_enrolled_users($cmid, $courseid) {
  * @param int $userid
  * @return int of user id
  */
-function get_role($courseid, $userid) {
+function get_role($courseid, $userid)
+{
     $rolestr = array();
     $adminrole = array();
     $context = context_course::instance($courseid);
@@ -531,7 +570,8 @@ function get_role($courseid, $userid) {
  * @param object $attendance
  * @return user object
  */
-function get_total_session_time($attendance) {
+function get_total_session_time($attendance)
+{
     if (!empty($attendance)) {
         foreach ($attendance as $data) {
             $connect = json_decode($data->connect);
@@ -546,13 +586,13 @@ function get_total_session_time($attendance) {
             }
         }
     }
-    if (!empty($connecttime) and ! empty($disconnecttime)) {
+    if (!empty($connecttime) and !empty($disconnecttime)) {
         $sessionstarttime = min($connecttime);
         $sessionendtime = max($disconnecttime);
         $totaltime = round(($sessionendtime - $sessionstarttime) / 60); // Total session time in minutes.
         return (object) array(
-                    'totalsessiontime' => $totaltime,
-                    'sessionstarttime' => $sessionstarttime, 'sessionendtime' => $sessionendtime
+            'totalsessiontime' => $totaltime,
+            'sessionstarttime' => $sessionstarttime, 'sessionendtime' => $sessionendtime
         ); // TODO.
     }
 }
@@ -567,7 +607,8 @@ function get_total_session_time($attendance) {
  * @param int $y
  * @return int minutes of student.
  */
-function calctime($connect, $disconnect, $x, $y) {
+function calctime($connect, $disconnect, $x, $y)
+{
     if (!empty($connect)) {
         sort($connect);
     }
@@ -583,7 +624,7 @@ function calctime($connect, $disconnect, $x, $y) {
         $disconnect[] = $y;
     }
 
-    if (!empty($connect) and ! empty($disconnect)) {
+    if (!empty($connect) and !empty($disconnect)) {
         if ($connect[0] > $disconnect[0]) {
             $connect[0] = $x;
         }
@@ -647,7 +688,7 @@ function calctime($connect, $disconnect, $x, $y) {
     }
     $connect = array_values($connect);
     $disconnect = array_values($disconnect);
-    if (!empty($connect) and ! empty($disconnect)) {
+    if (!empty($connect) and !empty($disconnect)) {
         $starttime = min($connect); // Student start time.
         $endtime = max($disconnect); // Student exit time.
         $totaltime = calc_student_time($connect, $disconnect); // Total time of student.
@@ -663,7 +704,8 @@ function calctime($connect, $disconnect, $x, $y) {
  * @param array $disconnect
  * @return int minutes of student.
  */
-function calc_student_time($connect, $disconnect) {
+function calc_student_time($connect, $disconnect)
+{
     $sum = 0;
     for ($i = 0; $i < count($connect); $i++) {
         if ($disconnect[$i] >= $connect[$i]) {
@@ -681,7 +723,8 @@ function calc_student_time($connect, $disconnect) {
  * @param object $variablesobject
  * @return string.
  */
-function settingstohex($variablesobject) {
+function settingstohex($variablesobject)
+{
     $localsettings = array();
     $localsettings[0] = $variablesobject->allowoverride;
     $localsettings[1] = $variablesobject->studentaudio;
@@ -709,7 +752,8 @@ function settingstohex($variablesobject) {
  * @param object $s
  * @return string.
  */
-function binarytohex($s) {
+function binarytohex($s)
+{
     $ret = '';
     for ($i = strlen($s) - 1; $i >= 3; $i -= 4) {
         $part = substr($s, $i + 1 - 4, 4);
@@ -749,7 +793,8 @@ function binarytohex($s) {
  * @param int $days
  * @return array
  */
-function reapeat_date_list($startdate, $expecteddate, $days) {
+function reapeat_date_list($startdate, $expecteddate, $days)
+{
     $nextdate = array();
     $listdays = str_replace('"', '', $days);
     $dayslist = explode(", ", $listdays);
@@ -759,7 +804,7 @@ function reapeat_date_list($startdate, $expecteddate, $days) {
         if (in_array($nameofday, $dayslist)) {
             $nextdate[] = $startdate;
         }
-    }
+    }    
     return $nextdate;
 }
 
@@ -769,7 +814,8 @@ function reapeat_date_list($startdate, $expecteddate, $days) {
  * @param int $date2
  * @return array
  */
-function week_between_two_dates($date1, $date2) {
+function week_between_two_dates($date1, $date2)
+{
     $first = DateTime::createFromFormat('Y-m-d', $date1);
     $second = DateTime::createFromFormat('Y-m-d', $date2);
     return floor($first->diff($second)->days / 7);
@@ -780,7 +826,8 @@ function week_between_two_dates($date1, $date2) {
  *
  * @return array
  */
-function congrea_get_dropdown() {
+function congrea_get_dropdown()
+{
     return array(
         NEXT_7_DAYS => get_string('next7days', 'congrea'),
         NEXT_30_DAYS => get_string('next30days', 'congrea'),
@@ -794,10 +841,17 @@ function congrea_get_dropdown() {
  * @param int $drodowndisplaymode
  * @return array
  */
-function congrea_print_dropdown_form($id, $drodowndisplaymode) {
+function congrea_print_dropdown_form($id, $drodowndisplaymode)
+{
     global $OUTPUT;
-    $select = new single_select(new moodle_url("/mod/congrea/view.php", array('id' => $id, 'upcomingsession' => true)),
-            'drodowndisplaymode', congrea_get_dropdown(), $drodowndisplaymode, null, "drodowndisplaymode");
+    $select = new single_select(
+        new moodle_url("/mod/congrea/view.php", array('id' => $id, 'upcomingsession' => true)),
+        'drodowndisplaymode',
+        congrea_get_dropdown(),
+        $drodowndisplaymode,
+        null,
+        "drodowndisplaymode"
+    );
     $select->set_label(get_string('displaymode', 'congrea'), array('class' => 'accesshide'));
     $select->class = "forummode";
     echo $OUTPUT->render($select);
@@ -810,7 +864,8 @@ function congrea_print_dropdown_form($id, $drodowndisplaymode) {
  * @param object $congrea
  * @param int $type
  */
-function congrea_get_records($congrea, $type) {
+function congrea_get_records($congrea, $type)
+{
     global $DB, $OUTPUT;
     $table = new html_table();
     $table->head = array('Start Date', 'Time Duration');
@@ -844,19 +899,35 @@ function congrea_get_records($congrea, $type) {
  * @param object $congrea
  * @return html.
  */
-function congrea_print_tabs($currenttab, $context, $cm, $congrea) {
+function congrea_print_tabs($currenttab, $context, $cm, $congrea)
+{
     global $OUTPUT;
     $row = array();
-    $row[] = new tabobject('upcomingsession', new moodle_url('/mod/congrea/view.php',
-            array('id' => $cm->id, 'upcomingsession' => $congrea->id)),
-            get_string('upcomingsession', 'mod_congrea'));
-    $row[] = new tabobject('psession', new moodle_url('/mod/congrea/view.php',
-            array('id' => $cm->id, 'psession' => $congrea->id)),
-            get_string('psession', 'mod_congrea'));
+    $row[] = new tabobject(
+        'upcomingsession',
+        new moodle_url(
+            '/mod/congrea/view.php',
+            array('id' => $cm->id, 'upcomingsession' => $congrea->id)
+        ),
+        get_string('upcomingsession', 'mod_congrea')
+    );
+    $row[] = new tabobject(
+        'psession',
+        new moodle_url(
+            '/mod/congrea/view.php',
+            array('id' => $cm->id, 'psession' => $congrea->id)
+        ),
+        get_string('psession', 'mod_congrea')
+    );
     if (has_capability('mod/congrea:sessionesetting', $context)) {
-        $row[] = new tabobject('sessionsettings', new moodle_url('/mod/congrea/sessionsettings.php',
-                array('id' => $cm->id, 'sessionsettings' => $congrea->id)),
-                get_string('sessionsettings', 'mod_congrea'));
+        $row[] = new tabobject(
+            'sessionsettings',
+            new moodle_url(
+                '/mod/congrea/sessionsettings.php',
+                array('id' => $cm->id, 'sessionsettings' => $congrea->id)
+            ),
+            get_string('sessionsettings', 'mod_congrea')
+        );
     }
     echo $OUTPUT->tabtree($row, $currenttab);
 }
@@ -868,7 +939,8 @@ function congrea_print_tabs($currenttab, $context, $cm, $congrea) {
  * @param array $arr
  * @return int.
  */
-function array_key_first(array $arr) {
+function array_key_first(array $arr)
+{
     foreach ($arr as $key => $unused) {
         return $key;
     }
@@ -884,7 +956,8 @@ function array_key_first(array $arr) {
  * @param object $mapasobject
  * @return array.
  */
-function unmarshalitem(array $data, $mapasobject = false) {
+function unmarshalitem(array $data, $mapasobject = false)
+{
     return unmarshalvalue(['M' => $data], $mapasobject);
 }
 
@@ -895,7 +968,8 @@ function unmarshalitem(array $data, $mapasobject = false) {
  * @param array $value
  * @param object $mapasobject
  */
-function unmarshalvalue(array $value, $mapasobject = false) {
+function unmarshalvalue(array $value, $mapasobject = false)
+{
     $type = key($value);
     $value = $value[$type];
     switch ($type) {
@@ -941,7 +1015,8 @@ function unmarshalvalue(array $value, $mapasobject = false) {
  * @param object $recordingattendance
  * @return int.
  */
-function recording_view($uid, $recordingattendance) {
+function recording_view($uid, $recordingattendance)
+{
     $sum = 0;
     $datapercent = 0;
     $recodingtime = null;
@@ -970,4 +1045,91 @@ function recording_view($uid, $recordingattendance) {
             return $datapercent;
         }
     }
+}
+
+/**
+ * check dates conflicts.
+ * serving for virtual class
+ *
+ * @param int $uid
+ * @param object $recordingattendance
+ * @return int.
+ */
+function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysname = false, $duration = false) {
+    global $DB;
+    if (!$repeat) {
+        $result = $DB->get_records('congrea_sessions', array('congreaid'=> $congrea));
+        //echo '<pre>'; print_r($result); exit;
+        if (!empty($result)) {
+            foreach ($result as $data) {
+                if (
+                    $data->starttime <= $startdate && $data->endtime >= $startdate ||
+                    $data->starttime <= $enddate && $data->endtime >= $enddate ||
+                    $data->starttime >= $startdate && $data->endtime <= $enddate
+                ) {
+                    return true; // conflicts
+                }
+            }
+        } else {
+            return false;
+        }
+    } else {
+        $expecteddate = date(
+            'Y-m-d H:i:s',
+            strtotime(date('Y-m-d H:i:s', $startdate) . "+$repeat weeks")
+        );
+        $datelist = reapeat_date_list_check(date('Y-m-d H:i:s', $startdate), $expecteddate, $daysname, $duration);
+        //echo '<pre>'; print_r($datelist); exit;
+        $starttime = date("Y-m-d H:i:s", $startdate);
+        $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime))); // DB Enddate.
+        //array_unshift($datelist, $fromdate);
+        $fromdate = (object) array('startdate' => date('Y-m-d H:i:s', $startdate), 'enddate' => $endtime);
+        array_unshift($datelist, $fromdate);
+        $sheduleddata = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
+        //echo '<pre>'; print_r($sheduleddata); exit;
+        foreach ($datelist as $list) { // Calculated data.
+            $liststartdate = strtotime($list->startdate);
+            $listenddate = strtotime($list->enddate);
+            //echo strtotime($list->startdate); exit;
+            foreach ($sheduleddata as $data) { // DB data. 
+                $stime = $data->timestart; // DB start time.
+                $duration = $data->timeduration;
+                $starttime = date("Y-m-d H:i:s", $stime);
+                $endtime = strtotime(date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)))); // DB Enddate.
+                //echo strtotime($list->startdate); exit;
+                if (
+                    $stime <= $liststartdate && $endtime >= $liststartdate ||
+                    $stime <= $listenddate && $endtime >= $listenddate ||
+                    $stime >= $liststartdate && $endtime <= $listenddate
+                ) {
+                    return true;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Returns array of between dates difference
+ * @param int $startdate
+ * @param int $expecteddate
+ * @param int $days
+ * @return array
+ */
+function reapeat_date_list_check($startdate, $expecteddate, $days, $duration)
+{
+    //$nextdate = array();
+    $listdays = str_replace('"', '', $days);
+    $dayslist = explode(", ", $listdays);
+    while (strtotime($startdate) < strtotime($expecteddate)) {
+        $startdate = date('Y-m-d H:i:s', strtotime("+1 days", strtotime($startdate)));
+        $nameofday = date('D', strtotime($startdate));
+        if (in_array($nameofday, $dayslist)) {
+            $starttime = date("Y-m-d H:i:s", strtotime($startdate));
+            $enddate = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime))); // DB Enddate.
+            $nextdate[] = (object) array('startdate' => $startdate, 'enddate' => $enddate);
+        }
+    }
+    return $nextdate;
 }
