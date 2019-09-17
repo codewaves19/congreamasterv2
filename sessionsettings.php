@@ -118,10 +118,12 @@ if ($mform->is_cancelled()) {
         //$DB->delete_records('congrea_sessions', array('id' => $edit));
         $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $edit));
         $data->id = $edit;
-        //$conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration);
+        // $conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration);
         // if(!$conflictstatus) {
         //     $DB->update_record('congrea_sessions', $data);
+        //     mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid);
         // } else {
+        //     //redirect($returnurl);
         //     echo 'conflicts in dates';
         // }
         $DB->update_record('congrea_sessions', $data);

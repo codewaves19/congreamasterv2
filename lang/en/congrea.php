@@ -246,3 +246,4 @@ $string['errortimeduration'] = 'You have entered an invalid session duration. It
 $string['errordurationlimit'] = 'You have entered an invalid session duration. It should be above 10 minutes and below 24 hours.';
 $string['conflictsdate'] = 'Unavailable slot';
 $string['deleteschedule'] = 'Are you sure want to delete';
+$string['todaynosession'] = 'Today no session please view below upcoming sessions';
