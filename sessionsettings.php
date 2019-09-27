@@ -35,7 +35,7 @@ $sessionsettings = optional_param('sessionsettings', 0, PARAM_INT);
 $edit = optional_param('edit', 0, PARAM_INT);
 $action = optional_param('action', ' ', PARAM_CLEANHTML);
 $delete = optional_param('delete', 0, PARAM_INT);
-$confirm = optional_param('confirm', 0, PARAM_INT); 
+$confirm = optional_param('confirm', 0, PARAM_INT);
 //echo $action; exit;
 if ($id) {
     $cm = get_coursemodule_from_id('congrea', $id, 0, false, MUST_EXIST);
@@ -57,24 +57,27 @@ $PAGE->set_title(format_string($congrea->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
 
-if($delete) {
+if ($delete) {
     require_login($course, false, $cm);
     //$modcontext = context_module::instance($cm->id);
     $submiturl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => $sessionsettings));
-    $returnurl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => $sessionsettings));                 
+    $returnurl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => $sessionsettings));
     if ($confirm != $delete) {
         echo $OUTPUT->header();
         echo $OUTPUT->heading(format_string($congrea->name));
-        $optionsyes = array('delete' => $delete, 'confirm' => $delete,'sesskey' => sesskey());
-                        echo $OUTPUT->confirm(get_string('deleteschedule', 'mod_congrea'),
-                            new moodle_url($submiturl, $optionsyes), $returnurl);
+        $optionsyes = array('delete' => $delete, 'confirm' => $delete, 'sesskey' => sesskey());
+        echo $OUTPUT->confirm(
+            get_string('deleteschedule', 'mod_congrea'),
+            new moodle_url($submiturl, $optionsyes),
+            $returnurl
+        );
         echo $OUTPUT->footer();
         die;
     } else if (data_submitted()) {
         $DB->delete_records('congrea_sessions', array('id' => $delete));
         $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $delete));
     }
-}   
+}
 //$editconflict = false;
 $mform = new mod_congrea_session_form(null, array('id' => $id, 'sessionsettings' => $sessionsettings, 'edit' => $edit, 'action' => $action, 'congreaid' => $congrea->id));
 if ($mform->is_cancelled()) {
@@ -110,17 +113,19 @@ if ($mform->is_cancelled()) {
     $data->congreaid = $congrea->id;
     //$conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration);
     if ($action == 'addsession') {
+        // $conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration);
         $sessionid = $DB->insert_record('congrea_sessions', $data); // Insert record in congrea table.
         mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration, $sessionid);
     }
-    if ($edit) {
+    if ($edit) { // Handle edit condition of schedule.
         $sessionid = $edit;
         //$DB->delete_records('congrea_sessions', array('id' => $edit));
         $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $edit));
         $data->id = $edit;
         // $conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration);
         // if(!$conflictstatus) {
-        //     $DB->update_record('congrea_sessions', $data);
+        //     //$DB->update_record('congrea_sessions', $data);
+        //     $DB->insert_record('congrea_sessions', $data);
         //     mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid);
         // } else {
         //     //redirect($returnurl);
@@ -128,13 +133,15 @@ if ($mform->is_cancelled()) {
         // }
         $DB->update_record('congrea_sessions', $data);
         mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid);
-    } 
+    }
     if (!empty($fromform->addmultiply)) {
         if ($fromform->period > 0) { // Here need to calculate repeate dates.
             $params = array('modulename' => 'congrea', 'instance' => $congrea->id, 'eventtype' => $sessionid);
             $eventid = $DB->get_field('event', 'id', $params);
-            $expecteddate = date('Y-m-d H:i:s',
-                    strtotime(date('Y-m-d H:i:s', $fromform->fromsessiondate) . "+$fromform->period weeks"));
+            $expecteddate = date(
+                'Y-m-d H:i:s',
+                strtotime(date('Y-m-d H:i:s', $fromform->fromsessiondate) . "+$fromform->period weeks")
+            );
             $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $expecteddate, $data->additional);
             $fromdate = date('Y-m-d H:i:s', $fromform->fromsessiondate);
             array_unshift($datelist, $fromdate); // // From start to repeat.
@@ -156,16 +163,16 @@ if (!empty($sessionsettings)) {
 congrea_print_tabs($currenttab, $context, $cm, $congrea);
 echo $OUTPUT->heading('Scheduled Sessions');
 if (has_capability('mod/congrea:sessionesetting', $context)) {
-        $options = array();
-        echo $OUTPUT->single_button(
-            $returnurl->out(
-                true,
-                array('action' => 'addsession', 'cmid' => $cm->id)
-            ),
-            get_string('addsessions', 'congrea'),
-            'get',
-            $options
-        );
+    $options = array();
+    echo $OUTPUT->single_button(
+        $returnurl->out(
+            true,
+            array('action' => 'addsession', 'cmid' => $cm->id)
+        ),
+        get_string('addsessions', 'congrea'),
+        'get',
+        $options
+    );
 }
 $table = new html_table();
 $table->head = array('Start Date', 'Session duration', 'Teacher', 'Repeat type', 'Repeat days', 'Action');
@@ -184,22 +191,28 @@ if (!empty($sessionlist)) {
         }
         $row[] = $username;
         if (!empty($list->repeattype)) {
-            $row[] = $list->repeattype.'-' .'Weekly';
+            $row[] = $list->repeattype . '-' . 'Weekly';
         } else {
             $row[] = 'none';
         }
         $row[] = str_replace('"', '', $list->additional);
         $buttons[] = html_writer::link(
-                        new moodle_url('/mod/congrea/sessionsettings.php',
-                                array('id' => $cm->id, 'edit' => $list->id, 'sessionsettings' => $sessionsettings)),
-                'Edit', array('class' => 'actionlink exportpage')
-                
+            new moodle_url(
+                '/mod/congrea/sessionsettings.php',
+                array('id' => $cm->id, 'edit' => $list->id, 'sessionsettings' => $sessionsettings)
+            ),
+            'Edit',
+            array('class' => 'actionlink exportpage')
+
         );
         $buttons[] = html_writer::link(
-            new moodle_url('/mod/congrea/sessionsettings.php',
-                    array('id' => $cm->id, 'delete' => $list->id, 'sessionsettings' => $sessionsettings)),
-            'Delete', array('class' => 'actionlink exportpage')
-    
+            new moodle_url(
+                '/mod/congrea/sessionsettings.php',
+                array('id' => $cm->id, 'delete' => $list->id, 'sessionsettings' => $sessionsettings)
+            ),
+            'Delete',
+            array('class' => 'actionlink exportpage')
+
         );
         $row[] = implode(' ', $buttons);
         $table->data[] = $row;
@@ -242,3 +255,4 @@ if ($edit || $action == 'addsession') {
 }
 // Finish the page.
 echo $OUTPUT->footer();
+

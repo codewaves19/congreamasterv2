@@ -939,7 +939,7 @@ function congrea_print_tabs($currenttab, $context, $cm, $congrea)
  * @param array $arr
  * @return int.
  */
-function array_key_first(array $arr)
+function congrea_array_key_first(array $arr)
 {
     foreach ($arr as $key => $unused) {
         return $key;

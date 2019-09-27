@@ -62,29 +62,38 @@ if(empty($sessionlist)) {
     // . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time ORDER BY timestart DESC LIMIT 1";
 
     $currentdata = $DB->get_records_sql($currentsql);
+    $upcomingsql = "SELECT timestart, timeduration, userid from {event}"
+    . " where instance = $congrea->id and modulename = 'congrea' and timestart >= $time ORDER BY timestart ASC LIMIT 1";
+    $upcomingdata = $DB->get_records_sql($upcomingsql);
+    if(empty($currentdata) and empty($upcomingdata)) { // Todo
+        $duration =  0;
+        $teacherid = 0;
+        $sessionstarttime = 0;
+        $sessionendtime = 0;        
+    }
     //echo '<pre>'; print_r($currentdata); exit;
     if (!empty($currentdata)) {
-        $sessionstarttime = array_key_first($currentdata);
+        $sessionstarttime = congrea_array_key_first($currentdata);
         $duration =  $currentdata[$sessionstarttime]->timeduration;
         $teacherid = $currentdata[$sessionstarttime]->userid;
         $starttime = date("Y-m-d H:i:s", $sessionstarttime);
         $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)));
         $sessionendtime = strtotime($endtime);        
     } else { // Todo.
-        $upcomingsql = "SELECT timestart, timeduration, userid from {event}"
-        . " where instance = $congrea->id and modulename = 'congrea' and timestart >= $time ORDER BY timestart ASC LIMIT 1";
-        $upcomingdata = $DB->get_records_sql($upcomingsql);
-        $sessionstarttime = array_key_first($upcomingdata);
-        $duration =  $upcomingdata[$sessionstarttime]->timeduration;
-        $teacherid = $upcomingdata[$sessionstarttime]->userid;
-        $starttime = date("Y-m-d H:i:s", $sessionstarttime);
-        $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)));
-        $sessionendtime = strtotime($endtime);        
+        if(!empty($upcomingdata)) {
+            $sessionstarttime = congrea_array_key_first($upcomingdata);
+            $duration =  $upcomingdata[$sessionstarttime]->timeduration;
+            $teacherid = $upcomingdata[$sessionstarttime]->userid;
+            $starttime = date("Y-m-d H:i:s", $sessionstarttime);
+            $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)));
+            $sessionendtime = strtotime($endtime);
+        }        
 
     }
+
+
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
-
 // Print the page header.
 $PAGE->set_url('/mod/congrea/view.php', array('id' => $cm->id));
 $PAGE->set_title(format_string($congrea->name));

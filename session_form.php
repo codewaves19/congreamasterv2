@@ -147,7 +147,6 @@ class mod_congrea_session_form extends moodleform {
         // if(!empty($data['edit'])) {
         //     $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $data['edit']));
         //     $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $data['edit']));
-
         // }
         $conflictstatus = check_conflicts($data['congreaid'], $data['fromsessiondate'], $endtime,  $repeat, $additional, $durationinminutes);
         if($conflictstatus) {
