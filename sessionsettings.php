@@ -111,7 +111,6 @@ if ($mform->is_cancelled()) {
     }
     $data->teacherid = $fromform->moderatorid;
     $data->congreaid = $congrea->id;
-    //$conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration);
     if ($action == 'addsession') {
         // $conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration);
         $sessionid = $DB->insert_record('congrea_sessions', $data); // Insert record in congrea table.

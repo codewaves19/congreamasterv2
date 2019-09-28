@@ -58,14 +58,11 @@ if(empty($sessionlist)) {
     $time = time();
     $currentsql = "SELECT timestart, timeduration, userid from {event}"
             . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time and (timestart + (timeduration*60)) > $time";
-    // $sql = "SELECT timestart, timeduration, userid from {event}"
-    // . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time ORDER BY timestart DESC LIMIT 1";
-
     $currentdata = $DB->get_records_sql($currentsql);
     $upcomingsql = "SELECT timestart, timeduration, userid from {event}"
     . " where instance = $congrea->id and modulename = 'congrea' and timestart >= $time ORDER BY timestart ASC LIMIT 1";
     $upcomingdata = $DB->get_records_sql($upcomingsql);
-    if(empty($currentdata) and empty($upcomingdata)) { // Todo
+    if(empty($currentdata) and empty($upcomingdata)) { // Todo.
         $duration =  0;
         $teacherid = 0;
         $sessionstarttime = 0;
@@ -90,8 +87,6 @@ if(empty($sessionlist)) {
         }        
 
     }
-
-
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 // Print the page header.
