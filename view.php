@@ -56,7 +56,7 @@ if(empty($sessionlist)) {
 }
     $time = time();
     $currentsql = "SELECT id, timestart, timeduration, userid from {event}"
-            . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time and (timestart + (timeduration*60)) > $time";
+            . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time and (timestart + (timeduration)) > $time";
             //echo $currentsql; exit;
             // $currentsql = "SELECT id, timestart, timeduration, userid from {event}"
             // . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time and (timestart + (timeduration*60)) > $time";
@@ -79,7 +79,7 @@ if(empty($sessionlist)) {
         $duration =  $currentdata[$eventid]->timeduration;
         $teacherid = $currentdata[$eventid]->userid;
         $starttime = date("Y-m-d H:i:s", $sessionstarttime);
-        $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)));
+        $endtime = date('Y-m-d H:i:s', strtotime("+$duration seconds", strtotime($starttime)));
         $sessionendtime = strtotime($endtime);        
     } else { // Todo.
         if(!empty($upcomingdata)) {
@@ -88,7 +88,7 @@ if(empty($sessionlist)) {
             $duration =  $upcomingdata[$eventid]->timeduration;
             $teacherid = $upcomingdata[$eventid]->userid;
             $starttime = date("Y-m-d H:i:s", $sessionstarttime);
-            $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)));
+            $endtime = date('Y-m-d H:i:s', strtotime("+$duration seconds", strtotime($starttime)));
             $sessionendtime = strtotime($endtime);
         }        
 

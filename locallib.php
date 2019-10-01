@@ -252,7 +252,7 @@ function mod_congrea_update_calendar($congrea, $startime, $endtime, $timeduratio
         $event->modulename = 'congrea';
         $event->instance = $congrea->id;
         $event->eventtype = $sessionid;
-        $event->timeduration = $timeduration;
+        $event->timeduration = $timeduration*60;
         calendar_event::create($event);
     } else {
         $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id));
@@ -285,7 +285,7 @@ function repeat_calendar($congrea, $eventid, $strattime, $sessionid, $timedurati
     $event->modulename = 'congrea';
     $event->instance = $congrea->id;
     $event->eventtype = $sessionid; // schedule id.
-    $event->timeduration = $timeduration;
+    $event->timeduration = $timeduration*60;
     calendar_event::create($event);
 }
 
@@ -876,7 +876,7 @@ function congrea_get_records($congrea, $type)
         foreach ($sessionlist as $list) {
             $row = array();
             $row[] = userdate($list->timestart);
-            $row[] = $list->timeduration . ' ' . 'Minutes';
+            $row[] = round($list->timeduration/60) . ' ' . 'Minutes';
             $table->data[] = $row;
         }
         if (!empty($table->data)) {
@@ -1132,9 +1132,9 @@ function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysn
         if (!empty($result)) {
             foreach ($result as $data) {
                 $stime = $data->timestart; // DB start time.
-                $duration = $data->timeduration;
+                $dbduration = round($data->timeduration/60);
                 $starttime = date("Y-m-d H:i:s", $stime);
-                $dataendtime = strtotime(date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)))); // DB Enddate.
+                $dataendtime = strtotime(date('Y-m-d H:i:s', strtotime("+$dbduration minutes", strtotime($starttime)))); // DB Enddate.
                 if (
                     $data->timestart <= $startdate && $dataendtime >= $startdate ||
                     $data->timestart <= $enddate && $dataendtime >= $enddate ||
@@ -1172,9 +1172,9 @@ function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysn
             //echo strtotime($list->startdate); exit;
             foreach ($sheduleddata as $data) { // DB data. 
                 $stime = $data->timestart; // DB start time.
-                $duration = $data->timeduration;
+                $rdbduration = round($data->timeduration/60);
                 $starttime = date("Y-m-d H:i:s", $stime);
-                $endtime = strtotime(date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)))); // DB Enddate.
+                $endtime = strtotime(date('Y-m-d H:i:s', strtotime("+$rdbduration minutes", strtotime($starttime)))); // DB Enddate.
                 //echo strtotime($list->startdate); exit;
                 if (
                     $stime <= $liststartdate && $endtime >= $liststartdate ||

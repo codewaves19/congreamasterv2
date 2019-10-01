@@ -187,7 +187,7 @@ if (!empty($sessionlist)) {
         }
         $row[] = $username;
         if (!empty($list->repeattype)) {
-            $row[] = $list->repeattype . '-' . 'Weekly';
+            $row[] = $list->repeattype . '-' . 'Week';
         } else {
             $row[] = 'none';
         }

@@ -245,5 +245,6 @@ $string['timeduration_help'] = 'Select the session duration that should be more 
 $string['errortimeduration'] = 'You have entered an invalid session duration. It should be above 10 minutes and below 24 hours.';
 $string['errordurationlimit'] = 'You have entered an invalid session duration. It should be above 10 minutes and below 24 hours.';
 $string['conflictsdate'] = 'Unavailable slot';
-$string['deleteschedule'] = 'Are you sure want to delete';
+$string['deleteschedule'] = 'Are you sure want to delete ?';
 $string['todaynosession'] = 'Today no session please view below upcoming sessions';
+$string['enrolteacher'] = 'Enrol a teacher in this course';
