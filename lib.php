@@ -197,8 +197,9 @@ function congrea_delete_instance($id) {
         }
         $DB->delete_records('congrea_quiz', array('congreaid' => $congrea->id));
     }
-    $DB->delete_records('congrea', array('id' => $congrea->id));
+    $DB->delete_records('congrea_sessions', array('congreaid' => $congrea->id));
     $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id));
+    $DB->delete_records('congrea', array('id' => $congrea->id));
     return true;
 }
 

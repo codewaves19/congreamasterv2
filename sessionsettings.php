@@ -100,7 +100,7 @@ if ($mform->is_cancelled()) {
                 $daylist .= $prefix . '"' . $keys . '"';
                 $prefix = ', ';
             }
-            $data->additional = $daylist;
+            $data->additional = str_replace('"', '', $daylist);
         } else {
             $data->additional = 'none';
         }
@@ -112,26 +112,23 @@ if ($mform->is_cancelled()) {
     $data->teacherid = $fromform->moderatorid;
     $data->congreaid = $congrea->id;
     if ($action == 'addsession') {
-        // $conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration);
         $sessionid = $DB->insert_record('congrea_sessions', $data); // Insert record in congrea table.
         mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration, $sessionid);
     }
     if ($edit) { // Handle edit condition of schedule.
-        $sessionid = $edit;
-        //$DB->delete_records('congrea_sessions', array('id' => $edit));
-        $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $edit));
-        $data->id = $edit;
-        // $conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration);
-        // if(!$conflictstatus) {
-        //     //$DB->update_record('congrea_sessions', $data);
-        //     $DB->insert_record('congrea_sessions', $data);
-        //     mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid);
-        // } else {
-        //     //redirect($returnurl);
-        //     echo 'conflicts in dates';
-        // }
-        $DB->update_record('congrea_sessions', $data);
-        mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid);
+        //$sessionid = $edit;
+        //$data->id = $edit;
+        $conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration, $edit);
+        if(!$conflictstatus) {
+            $sessionid = $DB->insert_record('congrea_sessions', $data);
+            if($sessionid) {
+                mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid);
+                $DB->delete_records('congrea_sessions', array('id' => $edit));
+                $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $edit));
+            }
+        } else {
+            echo 'conflicts in dates';
+        }
     }
     if (!empty($fromform->addmultiply)) {
         if ($fromform->period > 0) { // Here need to calculate repeate dates.

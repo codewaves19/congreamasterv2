@@ -38,9 +38,9 @@ $upcomingsession = optional_param('upcomingsession', 0, PARAM_INT);
 $psession = optional_param('psession', 0, PARAM_INT);
 $sessionsettings = optional_param('sessionsettings', 0, PARAM_INT);
 $drodowndisplaymode = optional_param('drodowndisplaymode', 0, PARAM_INT);
-
 if ($id) {
     $cm = get_coursemodule_from_id('congrea', $id, 0, false, MUST_EXIST);
+    //echo '<pre>'; print_r($cm); exit;
     $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
     $congrea = $DB->get_record('congrea', array('id' => $cm->instance), '*', MUST_EXIST);
 } else if ($n) {
@@ -50,16 +50,19 @@ if ($id) {
 } else {
     print_error('You must specify a course_module ID or an instance ID');
 }
-
 $sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id));
 if(empty($sessionlist)) {
     redirect(new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true)));
 }
     $time = time();
-    $currentsql = "SELECT timestart, timeduration, userid from {event}"
+    $currentsql = "SELECT id, timestart, timeduration, userid from {event}"
             . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time and (timestart + (timeduration*60)) > $time";
+            //echo $currentsql; exit;
+            // $currentsql = "SELECT id, timestart, timeduration, userid from {event}"
+            // . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time and (timestart + (timeduration*60)) > $time";
     $currentdata = $DB->get_records_sql($currentsql);
-    $upcomingsql = "SELECT timestart, timeduration, userid from {event}"
+    //echo  '<pre>'; print_r($currentdata); exit;
+    $upcomingsql = "SELECT id, timestart, timeduration, userid from {event}"
     . " where instance = $congrea->id and modulename = 'congrea' and timestart >= $time ORDER BY timestart ASC LIMIT 1";
     $upcomingdata = $DB->get_records_sql($upcomingsql);
     if(empty($currentdata) and empty($upcomingdata)) { // Todo.
@@ -70,17 +73,20 @@ if(empty($sessionlist)) {
     }
     //echo '<pre>'; print_r($currentdata); exit;
     if (!empty($currentdata)) {
-        $sessionstarttime = congrea_array_key_first($currentdata);
-        $duration =  $currentdata[$sessionstarttime]->timeduration;
-        $teacherid = $currentdata[$sessionstarttime]->userid;
+        //$sessionstarttime = congrea_array_key_first($currentdata);
+        $eventid = congrea_array_key_first($currentdata);
+        $sessionstarttime = $currentdata[$eventid]->timestart;
+        $duration =  $currentdata[$eventid]->timeduration;
+        $teacherid = $currentdata[$eventid]->userid;
         $starttime = date("Y-m-d H:i:s", $sessionstarttime);
         $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)));
         $sessionendtime = strtotime($endtime);        
     } else { // Todo.
         if(!empty($upcomingdata)) {
-            $sessionstarttime = congrea_array_key_first($upcomingdata);
-            $duration =  $upcomingdata[$sessionstarttime]->timeduration;
-            $teacherid = $upcomingdata[$sessionstarttime]->userid;
+            $eventid = congrea_array_key_first($upcomingdata);
+            $sessionstarttime = $upcomingdata[$eventid]->timestart;
+            $duration =  $upcomingdata[$eventid]->timeduration;
+            $teacherid = $upcomingdata[$eventid]->userid;
             $starttime = date("Y-m-d H:i:s", $sessionstarttime);
             $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime)));
             $sessionendtime = strtotime($endtime);
@@ -115,7 +121,7 @@ $completion->set_module_viewed($cm);
 // Output starts here.
 $strdelete = get_string('delete');
 $strplay = get_string('play', 'congrea');
-$returnurl = new moodle_url('/mod/congrea/view.php', array('id' => $cm->id));
+$returnurl = new moodle_url('/mod/congrea/view.php', array('id' => $cm->id, 'psession' => true));
 // Delete a selected recording, after confirmation.
 if ($delete and confirm_sesskey()) {
     require_capability('mod/congrea:recordingdelete', $context);
@@ -557,7 +563,7 @@ if (!$psession) {
     echo '</br>';
 }
 if ($upcomingsession || $upcomingsession == 0 and ! $psession) { // Upcoming sessions.
-    congrea_print_dropdown_form($id, $drodowndisplaymode);
+    congrea_print_dropdown_form($cm->id, $drodowndisplaymode);
     if ($drodowndisplaymode == 1 || $drodowndisplaymode == 0 and ! $psession) { // Get 7 session.
         congrea_get_records($congrea, 7);
     } else if ($drodowndisplaymode == 2) {
