@@ -113,7 +113,9 @@ if ($mform->is_cancelled()) {
     $data->congreaid = $congrea->id;
     if ($action == 'addsession') {
         $sessionid = $DB->insert_record('congrea_sessions', $data); // Insert record in congrea table.
-        mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration, $sessionid);
+        if(empty($fromform->period)) { // No repeat.
+            mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration, $sessionid);
+        }
     }
     if ($edit) { // Handle edit condition of schedule.
         //$sessionid = $edit;
@@ -122,7 +124,9 @@ if ($mform->is_cancelled()) {
         if(!$conflictstatus) {
             $sessionid = $DB->insert_record('congrea_sessions', $data);
             if($sessionid) {
-                mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid);
+                if(empty($fromform->period)) { // No repeat.
+                    mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid);
+                }
                 $DB->delete_records('congrea_sessions', array('id' => $edit));
                 $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $edit));
             }
