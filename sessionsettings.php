@@ -175,7 +175,7 @@ if (has_capability('mod/congrea:sessionesetting', $context)) {
     );
 }
 $table = new html_table();
-$table->head = array('Start Date', 'Session duration', 'Teacher', 'Repeat type', 'Repeat days', 'Action');
+$table->head = array('Start Date', 'Session duration', 'Teacher', 'Repeat for', 'Repeat days', 'Action');
 $sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id));
 if (!empty($sessionlist)) {
     foreach ($sessionlist as $list) {
@@ -191,7 +191,7 @@ if (!empty($sessionlist)) {
         }
         $row[] = $username;
         if (!empty($list->repeattype)) {
-            $row[] = $list->repeattype . '-' . 'Week';
+            $row[] = $list->repeattype . ' ' . 'Week';
         } else {
             $row[] = 'none';
         }
@@ -225,7 +225,8 @@ if (!empty($sessionlist)) {
         echo 'no session';
     }
 } else {
-    echo 'No any sessions are available'; // Todo- by get_string.
+    //echo 'No any sessions are available'; // Todo- by get_string.
+    echo $OUTPUT->notification(get_string('nosession', 'mod_congrea'));
 }
 if ($edit) {
     $list = $DB->get_records('congrea_sessions', array('id' => $edit));

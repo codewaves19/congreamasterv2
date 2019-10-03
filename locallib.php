@@ -898,15 +898,23 @@ function congrea_get_records($congrea, $type)
 {
     global $DB, $OUTPUT;
     $table = new html_table();
-    $table->head = array('Start Date', 'Time Duration');
+    $table->head = array('Start date', 'Time duration', 'Teacher name');
     $timestart = time(); //current time
     $sql = "SELECT * FROM {event} where modulename = 'congrea' and instance = $congrea->id  and timestart >= $timestart ORDER BY timestart ASC LIMIT $type"; // To do.
     $sessionlist = $DB->get_records_sql($sql);
     if (!empty($sessionlist)) {
         foreach ($sessionlist as $list) {
+            //echo $list->userid; exit;
             $row = array();
             $row[] = userdate($list->timestart);
             $row[] = round($list->timeduration/60) . ' ' . 'Minutes';
+            $teachername = $DB->get_record('user', array('id' => $list->userid));
+            if (!empty($teachername)) {
+                $username = $teachername->firstname . ' ' . $teachername->lastname; // Todo-for function.
+            } else {
+                $username = get_string('nouser', 'mod_congrea');
+            }
+            $row[] = $username;
             $table->data[] = $row;
         }
         if (!empty($table->data)) {
