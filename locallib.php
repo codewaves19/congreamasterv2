@@ -286,7 +286,7 @@ function mod_congrea_update_calendar_on_upgarde($congreaname, $startime, $endtim
         $event->timeduration = $timeduration*60;
         calendar_event::create($event);
     } else {
-        $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id));
+        $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $instanceid));
     }
 }
 /**
