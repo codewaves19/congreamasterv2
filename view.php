@@ -455,9 +455,9 @@ if ($psession) {
             $data = attendence_curl_request($apiurl, $record->session, $key, $authpassword, $authusername, $room, $USER->id);
             $attendencestatus = json_decode($data);
             if (!empty($attendencestatus->attendance)) {
-                $row[] = '<p style="color:green;">P</p>';
+                $row[] = '<p style="color:green;"><b>P</b></p>';
             } else {
-                $row[] = '<p style="color:red;">A</p>';
+                $row[] = '<p style="color:red;"><b>A</b></p>';
             }
         }
         $table->data[] = $row;
