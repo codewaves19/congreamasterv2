@@ -405,7 +405,7 @@ if ($psession) {
         echo $OUTPUT->heading('There are no recordings to show');
     }
     $table = new html_table();
-    $table->head = array('Filename', 'Time created', 'Action');
+    $table->head = array('File name', 'Time created', 'Action');
     $table->colclasses = array('centeralign', 'centeralign');
     $table->attributes['class'] = 'admintable generaltable';
     $table->id = "recorded_data";

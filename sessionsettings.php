@@ -82,7 +82,7 @@ if ($delete) {
 $mform = new mod_congrea_session_form(null, array('id' => $id, 'sessionsettings' => $sessionsettings, 'edit' => $edit, 'action' => $action, 'congreaid' => $congrea->id));
 if ($mform->is_cancelled()) {
     // Do nothing.
-    redirect(new moodle_url('/mod/congrea/view.php', array('id' => $cm->id)));
+    redirect(new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true)));
 } else if ($fromform = $mform->get_data()) {
     $data = new stdClass();
     $data->starttime = $fromform->fromsessiondate;
@@ -175,7 +175,7 @@ if (has_capability('mod/congrea:sessionesetting', $context)) {
     );
 }
 $table = new html_table();
-$table->head = array('Start Date', 'Session duration', 'Teacher', 'Repeat for', 'Repeat days', 'Action');
+$table->head = array('Date and time', 'Session duration', 'Teacher', 'Repeat for', 'Repeat days', 'Action');
 $sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id));
 if (!empty($sessionlist)) {
     foreach ($sessionlist as $list) {

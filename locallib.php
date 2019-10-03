@@ -898,7 +898,7 @@ function congrea_get_records($congrea, $type)
 {
     global $DB, $OUTPUT;
     $table = new html_table();
-    $table->head = array('Start date', 'Time duration', 'Teacher name');
+    $table->head = array('Date and time', 'Time duration', 'Teacher name');
     $timestart = time(); //current time
     $sql = "SELECT * FROM {event} where modulename = 'congrea' and instance = $congrea->id  and timestart >= $timestart ORDER BY timestart ASC LIMIT $type"; // To do.
     $sessionlist = $DB->get_records_sql($sql);
