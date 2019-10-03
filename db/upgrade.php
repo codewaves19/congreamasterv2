@@ -330,7 +330,7 @@ function xmldb_congrea_upgrade($oldversion) {
                         $congreaold->timeduration = round((abs($congreaold->endtime - $congreaold->starttime) / 60));
                         $congreaold->isrepeat = 0;
                         $congreaold->repeattype = 0;
-                        $congreaold->additional = 0;
+                        $congreaold->additional = 'none';
                         $congreaold->teacherid = $data->moderatorid;
                         $congreaold->congreaid = $data->id;
                         $sessionid = $DB->insert_record('congrea_sessions', $congreaold);
