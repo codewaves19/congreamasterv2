@@ -258,7 +258,37 @@ function mod_congrea_update_calendar($congrea, $startime, $endtime, $timeduratio
         $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id));
     }
 }
-
+/**
+ * Update the calendar entries for this congrea on upgarde.
+ *
+ * @param object $congrea
+ * @param int $startime
+ * @param int $endtime
+ * @param int $timeduration
+ *
+ * @return bool
+ */
+function mod_congrea_update_calendar_on_upgarde($congreaname, $startime, $endtime, $courseid, $teacherid, $instanceid, $sessionid, $timeduration)
+{
+    global $DB, $CFG;
+    require_once($CFG->dirroot . '/calendar/lib.php');
+    if ($startime && $endtime) {
+        $event = new stdClass();
+        $event->name = $congreaname;
+        $event->timestart = $startime; // Change because of sessionsettings.
+        $event->courseid = $courseid;
+        $event->groupid = 0;
+        //$teacherid = $DB->get_field('congrea_sessions', 'teacherid', array('id' => $sessionid));
+        $event->userid = $teacherid;
+        $event->modulename = 'congrea';
+        $event->instance = $instanceid;
+        $event->eventtype = $sessionid;
+        $event->timeduration = $timeduration*60;
+        calendar_event::create($event);
+    } else {
+        $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id));
+    }
+}
 /**
  * Update the calendar entries for this congrea.
  *
