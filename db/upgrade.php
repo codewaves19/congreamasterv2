@@ -334,7 +334,7 @@ function xmldb_congrea_upgrade($oldversion) {
                         $congreaold->teacherid = $data->moderatorid;
                         $congreaold->congreaid = $data->id;
                         $sessionid = $DB->insert_record('congrea_sessions', $congreaold);
-                        mod_congrea_update_calendar_on_upgarde($data->name, $congreaold->starttime, $endtime, $data->course, $data->moderatorid, $data->id, $sessionid, $timeduration);
+                        mod_congrea_update_calendar_on_upgarde($data->name, $congreaold->starttime, $enddate, $data->course, $data->moderatorid, $data->id, $sessionid,  $congreaold->timeduration);
                     }
                 }
             }
