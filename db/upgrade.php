@@ -40,6 +40,7 @@ function xmldb_congrea_upgrade($oldversion) {
     global $DB, $CFG;
 
     require_once($CFG->libdir . '/db/upgradelib.php');
+    require_once(dirname(__FILE__) . '/locallib.php');
 
     $dbman = $DB->get_manager(); // Loads ddl manager and xmldb classes.
 
