@@ -139,7 +139,7 @@ class mod_congrea_session_form extends moodleform {
             }
             $additional = $daylist;
         } else {
-            $additional = 'none';
+            $additional = 0;
         }
         if(!empty($data['period'])) {
             $repeat = $data['period'];

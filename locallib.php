@@ -252,7 +252,7 @@ function mod_congrea_update_calendar($congrea, $startime, $endtime, $timeduratio
         $event->modulename = 'congrea';
         $event->instance = $congrea->id;
         $event->eventtype = $sessionid;
-        $event->timeduration = $timeduration*60;
+        $event->timeduration = $timeduration * 60;
         calendar_event::create($event);
     } else {
         $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id));
@@ -283,7 +283,7 @@ function mod_congrea_update_calendar_on_upgarde($congreaname, $startime, $endtim
         $event->modulename = 'congrea';
         $event->instance = $instanceid;
         $event->eventtype = $sessionid;
-        $event->timeduration = $timeduration*60;
+        $event->timeduration = $timeduration * 60;
         calendar_event::create($event);
     } else {
         $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $instanceid));
@@ -315,7 +315,7 @@ function repeat_calendar($congrea, $eventid, $strattime, $sessionid, $timedurati
     $event->modulename = 'congrea';
     $event->instance = $congrea->id;
     $event->eventtype = $sessionid; // schedule id.
-    $event->timeduration = $timeduration*60;
+    $event->timeduration = $timeduration * 60;
     calendar_event::create($event);
 }
 
@@ -834,7 +834,7 @@ function reapeat_date_list($startdate, $expecteddate, $days)
         if (in_array($nameofday, $dayslist)) {
             $nextdate[] = $startdate;
         }
-    }    
+    }
     return $nextdate;
 }
 
@@ -907,7 +907,7 @@ function congrea_get_records($congrea, $type)
             //echo $list->userid; exit;
             $row = array();
             $row[] = userdate($list->timestart);
-            $row[] = round($list->timeduration/60) . ' ' . 'Minutes';
+            $row[] = round($list->timeduration / 60) . ' ' . 'Minutes';
             $teachername = $DB->get_record('user', array('id' => $list->userid));
             if (!empty($teachername)) {
                 $username = $teachername->firstname . ' ' . $teachername->lastname; // Todo-for function.
@@ -1158,19 +1158,22 @@ function recording_view($uid, $recordingattendance)
 //     }
 // }
 
-function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysname = false, $duration = false, $edit = false) {
+function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysname = false, $duration = false, $edit = false)
+{
     global $DB;
     if (!$repeat) {
-        if($edit) {
-            $result = $DB->get_records_sql('SELECT * FROM {event} WHERE instance = ? AND modulename = ? And eventtype != ?', 
-                            [$congrea, 'congrea', $edit]);
+        if ($edit) {
+            $result = $DB->get_records_sql(
+                'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And eventtype != ?',
+                [$congrea, 'congrea', $edit]
+            );
         } else {
             $result = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
         }
         if (!empty($result)) {
             foreach ($result as $data) {
                 $stime = $data->timestart; // DB start time.
-                $dbduration = round($data->timeduration/60);
+                $dbduration = round($data->timeduration / 60);
                 $starttime = date("Y-m-d H:i:s", $stime);
                 $dataendtime = strtotime(date('Y-m-d H:i:s', strtotime("+$dbduration minutes", strtotime($starttime)))); // DB Enddate.
                 if (
@@ -1191,36 +1194,40 @@ function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysn
         );
         $datelist = repeat_date_list_check(date('Y-m-d H:i:s', $startdate), $expecteddate, $daysname, $duration);
         //echo '<pre>'; print_r($datelist); exit;
-        $starttime = date("Y-m-d H:i:s", $startdate);
-        $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime))); // DB Enddate.
-        //array_unshift($datelist, $fromdate);
-        $fromdate = (object) array('startdate' => date('Y-m-d H:i:s', $startdate), 'enddate' => $endtime);
-        array_unshift($datelist, $fromdate);
-        if($edit) {
-            $sheduleddata = $DB->get_records_sql('SELECT * FROM {event} WHERE instance = ? AND modulename = ? And eventtype != ?', 
-                            [$congrea, 'congrea', $edit]);
-        } else {
-            $sheduleddata = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
-        }
-        //$sheduleddata = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
-        //echo '<pre>'; print_r($sheduleddata); exit;
-        foreach ($datelist as $list) { // Calculated data.
-            $liststartdate = strtotime($list->startdate);
-            $listenddate = strtotime($list->enddate);
-            //echo strtotime($list->startdate); exit;
-            foreach ($sheduleddata as $data) { // DB data. 
-                $stime = $data->timestart; // DB start time.
-                $rdbduration = round($data->timeduration/60);
-                $starttime = date("Y-m-d H:i:s", $stime);
-                $endtime = strtotime(date('Y-m-d H:i:s', strtotime("+$rdbduration minutes", strtotime($starttime)))); // DB Enddate.
+        if (!empty($datelist)) {
+            $starttime = date("Y-m-d H:i:s", $startdate);
+            $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime))); // DB Enddate.
+            //array_unshift($datelist, $fromdate);
+            $fromdate = (object) array('startdate' => date('Y-m-d H:i:s', $startdate), 'enddate' => $endtime);
+            array_unshift($datelist, $fromdate);
+            if ($edit) {
+                $sheduleddata = $DB->get_records_sql(
+                    'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And eventtype != ?',
+                    [$congrea, 'congrea', $edit]
+                );
+            } else {
+                $sheduleddata = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
+            }
+            //$sheduleddata = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
+            //echo '<pre>'; print_r($sheduleddata); exit;
+            foreach ($datelist as $list) { // Calculated data.
+                $liststartdate = strtotime($list->startdate);
+                $listenddate = strtotime($list->enddate);
                 //echo strtotime($list->startdate); exit;
-                if (
-                    $stime <= $liststartdate && $endtime >= $liststartdate ||
-                    $stime <= $listenddate && $endtime >= $listenddate ||
-                    $stime >= $liststartdate && $endtime <= $listenddate
-                ) {
-                    return true;
-                    break;
+                foreach ($sheduleddata as $data) { // DB data. 
+                    $stime = $data->timestart; // DB start time.
+                    $rdbduration = round($data->timeduration / 60);
+                    $starttime = date("Y-m-d H:i:s", $stime);
+                    $endtime = strtotime(date('Y-m-d H:i:s', strtotime("+$rdbduration minutes", strtotime($starttime)))); // DB Enddate.
+                    //echo strtotime($list->startdate); exit;
+                    if (
+                        $stime <= $liststartdate && $endtime >= $liststartdate ||
+                        $stime <= $listenddate && $endtime >= $listenddate ||
+                        $stime >= $liststartdate && $endtime <= $listenddate
+                    ) {
+                        return true;
+                        break;
+                    }
                 }
             }
         }
@@ -1235,19 +1242,21 @@ function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysn
  * @param int $days
  * @return array
  */
-function repeat_date_list_check($startdate, $expecteddate, $days, $duration) 
+function repeat_date_list_check($startdate, $expecteddate, $days, $duration)
 {
     //$nextdate = array();
-    $listdays = str_replace('"', '', $days);
-    $dayslist = explode(", ", $listdays);
-    while (strtotime($startdate) < strtotime($expecteddate)) {
-        $startdate = date('Y-m-d H:i:s', strtotime("+1 days", strtotime($startdate)));
-        $nameofday = date('D', strtotime($startdate));
-        if (in_array($nameofday, $dayslist)) {
-            $starttime = date("Y-m-d H:i:s", strtotime($startdate));
-            $enddate = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime))); // DB Enddate.
-            $nextdate[] = (object) array('startdate' => $startdate, 'enddate' => $enddate);
+    if (!empty($days)) {
+        $listdays = str_replace('"', '', $days);
+        $dayslist = explode(", ", $listdays);
+        while (strtotime($startdate) < strtotime($expecteddate)) {
+            $startdate = date('Y-m-d H:i:s', strtotime("+1 days", strtotime($startdate)));
+            $nameofday = date('D', strtotime($startdate));
+            if (in_array($nameofday, $dayslist)) {
+                $starttime = date("Y-m-d H:i:s", strtotime($startdate));
+                $enddate = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime))); // DB Enddate.
+                $nextdate[] = (object) array('startdate' => $startdate, 'enddate' => $enddate);
+            }
         }
+        return $nextdate;
     }
-    return $nextdate;
 }
