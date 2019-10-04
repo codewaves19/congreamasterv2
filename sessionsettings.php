@@ -86,7 +86,7 @@ if ($mform->is_cancelled()) {
 } else if ($fromform = $mform->get_data()) {
     $data = new stdClass();
     $data->starttime = $fromform->fromsessiondate;
-    $durationinminutes = $fromform->timeduration / 60;
+    $durationinminutes = round($fromform->timeduration / 60);
     $expecteddate = strtotime(date('Y-m-d H:i:s', strtotime("+$durationinminutes minutes", $data->starttime)));
     $data->endtime = $expecteddate;
     $timeduration = round((abs($data->endtime - $data->starttime) / 60));

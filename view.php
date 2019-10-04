@@ -227,6 +227,7 @@ if (!empty($cgapi = get_config('mod_congrea', 'cgapi')) && !empty($cgsecret = ge
     echo $OUTPUT->footer();
     exit();
 }
+
 $a = new stdClass();
 $a->open = userdate($sessionstarttime);
 $a->close = userdate($sessionendtime);
@@ -236,12 +237,14 @@ if (($sessionstarttime > time() && $sessionstarttime <= time())) {
     $classname .= ' online';
 }
 if (!$psession) {
+    if(!empty($sessionstarttime) and !empty($sessionendtime) and !empty($teacherid)) {
     echo html_writer::start_tag('div', array('class' => $classname));
     echo html_writer::tag('div', get_string('congreatiming', 'mod_congrea', $a));
-    if (!empty($teacherid)) {
-        echo html_writer::tag('div', get_string('teachername', 'mod_congrea', $user));
-    } else {
-        echo html_writer::tag('div', 'Moderator : None');
+    echo html_writer::tag('div', get_string('teachername', 'mod_congrea', $user));
+    } else { // Sessions are past.
+    echo html_writer::start_tag('div', array('class' => $classname));
+    echo html_writer::tag('div', get_string('notsession', 'mod_congrea'));
+    echo html_writer::tag('div', '');
     }
 }
 // Conditions to show the intro can change to look for own settings or whatever.
@@ -381,7 +384,7 @@ if ($sessionendtime > time() && $sessionstarttime <= time()) {
     );
     echo $form;
 } else {
-    if (!$psession) {
+    if (!$psession and !empty($sessionstarttime) and !empty($sessionendtime)) {
         echo $OUTPUT->heading(get_string('sessionclosed', 'congrea'));  // Congrea closed.
     }
 }
@@ -466,7 +469,7 @@ if ($psession) {
 // Student Report according to session.
 if ($session) {
     $table = new html_table();
-    $table->head = array('Name', 'Start time', 'Exit time', 'Duration attended', 'Presence', 'Recording view', 'Attendance');
+    $table->head = array('Name', 'Join time', 'Exit time', 'Duration attended', 'Presence', 'Recording viewed', 'Attendance');
     $table->colclasses = array('centeralign', 'centeralign');
     $table->attributes['class'] = 'admintable generaltable';
     $apiurl = 'https://api.congrea.net/t/analytics/attendance';

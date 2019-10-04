@@ -119,7 +119,7 @@ class mod_congrea_session_form extends moodleform {
         if ($data['timeduration'] == 0) {
             $errors['timeduration'] = get_string('errortimeduration', 'congrea');
         }
-        $durationinminutes = $data['timeduration'] / 60;
+        $durationinminutes = round($data['timeduration'] / 60);
         if ($durationinminutes < 10) {
             $errors['timeduration'] = get_string('errordurationlimit', 'congrea');
         }
