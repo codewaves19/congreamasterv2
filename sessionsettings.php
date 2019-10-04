@@ -161,7 +161,7 @@ if (!empty($sessionsettings)) {
     $currenttab = 'sessionsettings';
 }
 congrea_print_tabs($currenttab, $context, $cm, $congrea);
-echo $OUTPUT->heading('Scheduled Sessions');
+//echo $OUTPUT->heading('Scheduled Sessions');
 if (has_capability('mod/congrea:sessionesetting', $context)) {
     $options = array();
     echo $OUTPUT->single_button(
@@ -174,6 +174,7 @@ if (has_capability('mod/congrea:sessionesetting', $context)) {
         $options
     );
 }
+echo $OUTPUT->heading('Scheduled Sessions');
 $table = new html_table();
 $table->head = array('Date and time', 'Session duration', 'Teacher', 'Repeat for', 'Repeat days', 'Action');
 $sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id));

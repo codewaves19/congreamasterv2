@@ -249,4 +249,4 @@ $string['deleteschedule'] = 'Are you sure want to delete ?';
 $string['todaynosession'] = 'Today no session please view below upcoming sessions';
 $string['enrolteacher'] = 'Enrol a teacher in this course';
 $string['nosession'] = 'No sessions are available to display.';
-$string['nosession'] = 'There is no any sessions';
+$string['nosession'] = 'There are no any sessions';
