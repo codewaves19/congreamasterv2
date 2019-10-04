@@ -435,7 +435,7 @@ if ($psession) {
                     html_writer::empty_tag('img', array(
                                 'src' => $imageurl,
                                 'alt' => 'Attendance Report', 'class' => 'attend'
-                            )), array('title' => 'Attendance Report')
+                            )), array('title' => 'View Attendance Report')
             );
         }
         // Delete button.
