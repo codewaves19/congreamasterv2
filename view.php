@@ -469,9 +469,9 @@ if ($psession) {
 // Student Report according to session.
 if ($session) {
     $table = new html_table();
-    $table->head = array('Name', 'Join time', 'Exit time', 'Duration attended', 'Presence', 'Recording viewed', 'Attendance');
+    $table->head = array('Name', 'Join time', 'Exit time', 'Presence', 'Recording viewed', 'Attendance');
     $table->colclasses = array('centeralign', 'centeralign');
-    $table->attributes['class'] = 'admintable generaltable';
+    $table->attributes['class'] = 'admintable generaltable attendance';
     $apiurl = 'https://api.congrea.net/t/analytics/attendance';
     $data = attendence_curl_request($apiurl, $session, $key, $authpassword, $authusername, $room); // TODO.
     $attendencestatus = json_decode($data);
@@ -506,13 +506,23 @@ if ($session) {
             $recordingattendance = json_decode($recdata, true);
             if (!empty(recording_view($sattendence->uid, $recordingattendance))) {
                 $recview = recording_view($sattendence->uid, $recordingattendance);
+                if($recview->totalviewd < 60) {
+                    $totalseconds = ($sessionstatus->totalsessiontime*60);
+                    $rectotalviewedpercent = round(($recview->totalviewd*100)/$totalseconds); 
+                    $recviewed = $recview->totalviewd.' '.'Seconds';
+                } else {
+                    $recviewed = round($recview->totalviewd/60).' '.'Minutes';
+                    $rectotalviewedpercent = $recview->totalviewedpercent;
+                } 
+                //echo '<pre>'; print_r($recview); exit;
             } else {
-                $recview = 0;
+                $rectotalviewedpercent = 0;
+                $recviewed = '';
             }
             $table->data[] = array(
                 $username, date('y-m-d h:i:s', $studentsstatus->starttime),
-                date('y-m-d h:i:s', $studentsstatus->endtime), $studentsstatus->totalspenttime . ' ' . 'minutes',
-                round($presence) . '%', $recview . '%', '<p style="color:green;"><b>P</b></p>'
+                date('y-m-d h:i:s', $studentsstatus->endtime),
+                round($presence) . '%</br>'.$studentsstatus->totalspenttime.' '.'Minutes', $rectotalviewedpercent . '%</br>'.$recviewed, '<p style="color:green;"><b>P</b></p>'
             );
         }
         if (!empty($attendence)) {
@@ -533,7 +543,7 @@ if ($session) {
                 } else {
                     $recview = 0;
                 }
-                $table->data[] = array($username, '-', '-', '-', '-', $recview . '%', '<p style="color:red;"><b>A</b></p>');
+                $table->data[] = array($username, '-', '-', '-', $recview . '%', '<p style="color:red;"><b>A</b></p>');
             }
         } else {
             echo get_string('absentuser', 'mod_congrea');
