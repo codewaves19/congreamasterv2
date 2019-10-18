@@ -509,9 +509,9 @@ if ($session) {
                 if($recview->totalviewd < 60) {
                     $totalseconds = ($sessionstatus->totalsessiontime*60);
                     $rectotalviewedpercent = round(($recview->totalviewd*100)/$totalseconds); 
-                    $recviewed = $recview->totalviewd.' '.'Seconds';
+                    $recviewed = $recview->totalviewd.' '.'Secs';
                 } else {
-                    $recviewed = round($recview->totalviewd/60).' '.'Minutes';
+                    $recviewed = round($recview->totalviewd/60).' '.'Mins';
                     $rectotalviewedpercent = $recview->totalviewedpercent;
                 } 
                 //echo '<pre>'; print_r($recview); exit;
@@ -522,7 +522,7 @@ if ($session) {
             $table->data[] = array(
                 $username, date('y-m-d h:i:s', $studentsstatus->starttime),
                 date('y-m-d h:i:s', $studentsstatus->endtime),
-                round($presence) . '%</br>'.$studentsstatus->totalspenttime.' '.'Minutes', $rectotalviewedpercent . '%</br>'.$recviewed, '<p style="color:green;"><b>P</b></p>'
+                round($presence) . '%</br>'.$studentsstatus->totalspenttime.' '.'Mins', $rectotalviewedpercent . '%</br>'.$recviewed, '<p style="color:green;"><b>P</b></p>'
             );
         }
         if (!empty($attendence)) {
