@@ -512,13 +512,13 @@ if ($session) {
                     $recviewed = $recview->totalviewd.' '.'Secs';
                 } else {
                     //echo $recview->totalviewd; exit;
-                    $init = $recview->totalviewd;
+                    //$init = $recview->totalviewd;
                     // $hours = floor($init / 3600);
-                    $minutes = floor(($init / 60) % 60);
+                    //$minutes = floor(($init / 60) % 60);
                     // $seconds = $init % 60;
                     //echo "$hours:$minutes:$seconds"; exit;
                     //$recviewed = $hours.'h: '.$minutes.'m: '.$seconds.'s';
-                    $recviewed = $minutes.' Mins';
+                    $recviewed = round($recview->totalviewd/60).' Mins';
                     $rectotalviewedpercent = $recview->totalviewedpercent;
                 } 
                 //echo '<pre>'; print_r($recview); exit;
