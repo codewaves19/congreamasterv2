@@ -121,7 +121,11 @@ table#recorded_data a[title="Delete"] img.iconsmall {
 
     #page-mod-congrea-view .wrapper-record-list table td.cell.c2 {
         width: 110px;
+    }    
+    #page-mod-congrea-view .wrapper-record-list .generaltable.attendance {
+        font-size: 14px;
     }
+
 }
 
 @-moz-document url-prefix() {
@@ -151,3 +155,4 @@ body#page-mod-congrea-sessionsettings .generaltable th.header.c5,
 #page-mod-congrea-view .wrapper-record-list table.generaltable.attendance td.cell.c2 {
     width: auto;
 }
+

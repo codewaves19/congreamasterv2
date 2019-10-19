@@ -1078,10 +1078,10 @@ function recording_view($uid, $recordingattendance)
                             $sum = $viewdata + $sum;
                         }
                     }
-                }
+                }            
                 $datapercent = round((($sum * 5) / ($recodingtime / 1000)) * 100);
             }
-            return (object) array('totalviewd'=> round($sum * 5), 'totalviewedpercent' => $datapercent);
+            return (object) array('totalviewd'=> round($sum * 5), 'totalviewedpercent' => $datapercent, 'recodingtime' => ($recodingtime / 1000));
         }
     }
 }

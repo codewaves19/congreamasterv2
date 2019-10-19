@@ -507,22 +507,29 @@ if ($session) {
             if (!empty(recording_view($sattendence->uid, $recordingattendance))) {
                 $recview = recording_view($sattendence->uid, $recordingattendance);
                 if($recview->totalviewd < 60) {
-                    $totalseconds = ($sessionstatus->totalsessiontime*60);
+                    $totalseconds = $recview->recodingtime;
                     $rectotalviewedpercent = round(($recview->totalviewd*100)/$totalseconds); 
                     $recviewed = $recview->totalviewd.' '.'Secs';
                 } else {
-                    $recviewed = round($recview->totalviewd/60).' '.'Mins';
+                    //echo $recview->totalviewd; exit;
+                    $init = $recview->totalviewd;
+                    // $hours = floor($init / 3600);
+                    $minutes = floor(($init / 60) % 60);
+                    // $seconds = $init % 60;
+                    //echo "$hours:$minutes:$seconds"; exit;
+                    //$recviewed = $hours.'h: '.$minutes.'m: '.$seconds.'s';
+                    $recviewed = $minutes.' Mins';
                     $rectotalviewedpercent = $recview->totalviewedpercent;
                 } 
                 //echo '<pre>'; print_r($recview); exit;
             } else {
                 $rectotalviewedpercent = 0;
-                $recviewed = '';
+                $recviewed = '-';
             }
             $table->data[] = array(
                 $username, date('y-m-d h:i:s', $studentsstatus->starttime),
                 date('y-m-d h:i:s', $studentsstatus->endtime),
-                round($presence) . '%</br>'.$studentsstatus->totalspenttime.' '.'Mins', $rectotalviewedpercent . '%</br>'.$recviewed, '<p style="color:green;"><b>P</b></p>'
+                $studentsstatus->totalspenttime.' '.'Mins', $recviewed, '<p style="color:green;"><b>P</b></p>'
             );
         }
         if (!empty($attendence)) {
@@ -543,7 +550,7 @@ if ($session) {
                 } else {
                     $recview = 0;
                 }
-                $table->data[] = array($username, '-', '-', '-', $recview . '%', '<p style="color:red;"><b>A</b></p>');
+                $table->data[] = array($username, '-', '-', '-', '-', '<p style="color:red;"><b>A</b></p>');
             }
         } else {
             echo get_string('absentuser', 'mod_congrea');
@@ -565,7 +572,7 @@ if (!empty($table) and $session and $sessionstatus) {
     $presentnroluser = count($attendence);
     $upsentuser = $countenroluser - $presentnroluser;
     $present = '<b> Session duration: </b>' . $sessionstatus->totalsessiontime . ' ' .
-    'minutes' . '</br>' . '<b> Students absent: </b>' . $upsentuser . '</br>' . '<b> Students present: </b>' . $presentnroluser;
+    'Mins' . '</br>' . '<b> Students absent: </b>' . $upsentuser . '</br>' . '<b> Students present: </b>' . $presentnroluser;
     echo html_writer::tag('div', $present, array('class' => 'present'));
     echo html_writer::table($table);
     echo html_writer::end_tag('div');
