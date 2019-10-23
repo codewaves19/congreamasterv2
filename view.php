@@ -545,12 +545,21 @@ if ($session) {
                 } else {
                     $username = get_string('nouser', 'mod_congrea');
                 }
-                if (!empty(recording_view($data, $recordingattendance))) {
+                if (!empty(recording_view($data,  $recordingattendance))) {
                     $recview = recording_view($data, $recordingattendance);
+                    if($recview->totalviewd < 60) {
+                        $totalseconds = $recview->recodingtime;
+                        $rectotalviewedpercent = round(($recview->totalviewd*100)/$totalseconds); 
+                        $recviewed = $recview->totalviewd.' '.'Secs';
+                    } else {
+                        $recviewed = round($recview->totalviewd/60).' Mins';
+                        $rectotalviewedpercent = $recview->totalviewedpercent;
+                    } 
                 } else {
-                    $recview = 0;
+                    $rectotalviewedpercent = 0;
+                    $recviewed = '-';
                 }
-                $table->data[] = array($username, '-', '-', '-', '-', '<p style="color:red;"><b>A</b></p>');
+                $table->data[] = array($username, '-', '-', '-', $recviewed, '<p style="color:red;"><b>A</b></p>');
             }
         } else {
             echo get_string('absentuser', 'mod_congrea');
