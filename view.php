@@ -25,6 +25,8 @@ require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 require_once(dirname(__FILE__) . '/lib.php');
 require_once(dirname(__FILE__) . '/locallib.php');
 require_once($CFG->dirroot . '/calendar/lib.php');
+require_once(dirname(__FILE__) . '/session_form.php');
+require_once($CFG->dirroot . '/calendar/lib.php');
 
 $id = optional_param('id', 0, PARAM_INT); // Course_module ID.
 $report = optional_param('report', 0, PARAM_INT); // Course_module ID.
@@ -38,6 +40,7 @@ $upcomingsession = optional_param('upcomingsession', 0, PARAM_INT);
 $psession = optional_param('psession', 0, PARAM_INT);
 $sessionsettings = optional_param('sessionsettings', 0, PARAM_INT);
 $drodowndisplaymode = optional_param('drodowndisplaymode', 0, PARAM_INT);
+$addsession = optional_param('addsession', 0, PARAM_INT);
 if ($id) {
     $cm = get_coursemodule_from_id('congrea', $id, 0, false, MUST_EXIST);
     //echo '<pre>'; print_r($cm); exit;
@@ -50,10 +53,10 @@ if ($id) {
 } else {
     print_error('You must specify a course_module ID or an instance ID');
 }
-$sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id));
-if(empty($sessionlist)) {
-    redirect(new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true)));
-}
+// $sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id));
+// if(empty($sessionlist)) {
+//     redirect(new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true)));
+// }
     $time = time();
     $currentsql = "SELECT id, timestart, timeduration, userid from {event}"
             . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time and (timestart + (timeduration)) > $time";
@@ -123,6 +126,7 @@ $strdelete = get_string('delete');
 $strplay = get_string('play', 'congrea');
 $returnurl = new moodle_url('/mod/congrea/view.php', array('id' => $cm->id, 'psession' => true));
 // Delete a selected recording, after confirmation.
+$PAGE->requires->js_call_amd('mod_congrea/congrea', 'attachFunction');
 if ($delete and confirm_sesskey()) {
     require_capability('mod/congrea:recordingdelete', $context);
     if ($confirm != md5($delete)) {
@@ -382,11 +386,22 @@ if ($sessionendtime > time() && $sessionstarttime <= time()) {
             $upload, $down, $info, $cgcolor, $webapi, $userpicturesrc,
             $fromcms, $licensekey, $audiostatus, $videostatus, $recordingstatus, $hexcode, $joinbutton
     );
+    if (has_capability('mod/congrea:sessionesetting', $context) and !$psession) {
+        $options = array();
+        $returnurl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'action' => 'addsession'));
+        echo $OUTPUT->single_button($returnurl,  get_string('addsessions', 'congrea'), 'get', array('title' => 'add sessions'));
+    } 
     echo $form;
 } else {
     if (!$psession and !empty($sessionstarttime) and !empty($sessionendtime)) {
         echo $OUTPUT->heading(get_string('sessionclosed', 'congrea'));  // Congrea closed.
     }
+   //echo html_writer::tag('div', 'sdsad');
+    if (has_capability('mod/congrea:sessionesetting', $context) and !$psession) {
+        $options = array();
+        $returnurl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'action' => 'addsession'));
+        echo $OUTPUT->single_button($returnurl,  get_string('addsessions', 'congrea'), 'get', array('title' => 'add sessions'));
+    } 
 }
 // Upload congrea recording.
 $postdata = json_encode(array('room' => $room));
@@ -469,7 +484,7 @@ if ($psession) {
 // Student Report according to session.
 if ($session) {
     $table = new html_table();
-    $table->head = array('Name', 'Join time', 'Exit time', 'Duration attended', 'Presence', 'Recording viewed', 'Attendance');
+    $table->head = array('Name', 'Join time', 'Exit time', 'Presence', 'Recording viewed', 'Attendance');
     $table->colclasses = array('centeralign', 'centeralign');
     $table->attributes['class'] = 'admintable generaltable';
     $apiurl = 'https://api.congrea.net/t/analytics/attendance';
@@ -506,13 +521,20 @@ if ($session) {
             $recordingattendance = json_decode($recdata, true);
             if (!empty(recording_view($sattendence->uid, $recordingattendance))) {
                 $recview = recording_view($sattendence->uid, $recordingattendance);
+                if($recview->totalviewd <= 60) {
+                    $recviewed = $recview->totalviewd.' '.'Seconds';
+                } else {
+                    $recviewed = $recview->totalviewd.' '.'Minutes';
+                } 
+                //echo '<pre>'; print_r($recview); exit;
             } else {
-                $recview = 0;
+                $recview->totalviewedpercent = 0;
+                $recviewed = '';
             }
             $table->data[] = array(
                 $username, date('y-m-d h:i:s', $studentsstatus->starttime),
-                date('y-m-d h:i:s', $studentsstatus->endtime), $studentsstatus->totalspenttime . ' ' . 'minutes',
-                round($presence) . '%', $recview . '%', '<p style="color:green;"><b>P</b></p>'
+                date('y-m-d h:i:s', $studentsstatus->endtime),
+                round($presence) . '%</br>'.$studentsstatus->totalspenttime.' '.'Minutes', $recview->totalviewedpercent . '%</br>'.$recviewed, '<p style="color:green;"><b>P</b></p>'
             );
         }
         if (!empty($attendence)) {
@@ -530,10 +552,17 @@ if ($session) {
                 }
                 if (!empty(recording_view($data, $recordingattendance))) {
                     $recview = recording_view($data, $recordingattendance);
+                    if($recview->totalviewd <= 60) {
+                        $recviewed = $recview->totalviewd.' '.'Seconds';
+                    } else {
+                        $recviewed = $recview->totalviewd.' '.'Minutes';
+                    } 
+                    //echo '<pre>'; print_r($recview); exit;
                 } else {
-                    $recview = 0;
+                    $recview->totalviewedpercent = 0;
+                    $recviewed = '';
                 }
-                $table->data[] = array($username, '-', '-', '-', '-', $recview . '%', '<p style="color:red;"><b>A</b></p>');
+                $table->data[] = array($username, '-', '-', '-', $recview . '%', '<p style="color:red;"><b>A</b></p>');
             }
         } else {
             echo get_string('absentuser', 'mod_congrea');
@@ -542,7 +571,6 @@ if ($session) {
         echo get_string('absentsessionuser', 'mod_congrea');
     }
 }
-
 if (!empty($table->data) and ! $session) {
     echo html_writer::start_tag('div', array('class' => 'no-overflow'));
     echo html_writer::table($table);
@@ -565,16 +593,104 @@ if (!$psession) {
     echo html_writer::end_tag('div');
     echo '</br>';
 }
-if ($upcomingsession || $upcomingsession == 0 and ! $psession) { // Upcoming sessions.
+if ($upcomingsession || $upcomingsession == 0 and ! $psession and !$addsession) { // Upcoming sessions.
     congrea_print_dropdown_form($cm->id, $drodowndisplaymode);
     if ($drodowndisplaymode == 1 || $drodowndisplaymode == 0 and ! $psession) { // Get 7 session.
-        congrea_get_records($congrea, 7);
+        congrea_get_records($congrea, 7, $context, $cm->id);
     } else if ($drodowndisplaymode == 2) {
         // For 30 days.
-        congrea_get_records($congrea, 30);
+        congrea_get_records($congrea, 30, $context, $cm->id);
     } else if ($drodowndisplaymode == 3) {
         // For 90 days.
-        congrea_get_records($congrea, 90);
+        congrea_get_records($congrea, 90, $context, $cm->id);
     }
 }
+
+//if($addsession == true) {
+    //redirect(new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id)));
+    //$mform = new mod_congrea_session_form(null, array('id' => $id, 'addsession' => true, 'congreaid' => $congrea->id));
+    // if ($mform->is_cancelled()) {
+    //     // Do nothing.
+    //     redirect(new moodle_url('/mod/congrea/view.php', array('id' => $id)));
+    // } else if ($fromform = $mform->get_data()) {
+    //         $event = new stdClass();
+    //         $event->name = $congrea->name;
+    //         if (!empty($fromform->days)) {
+    //             $countofweeks = $fromform->period;
+    //             $prefix = $daylist = '';
+    //             foreach ($fromform->days as $keys => $daysname) {
+    //                 $daylist .= $prefix . '"' . $keys . '"';
+    //                 $prefix = ', ';
+    //             }
+    //             $daysnames = str_replace('"', '', $daylist);
+    //             $event->description = $countofweeks.'weekly : '.$daysnames;
+    //         } else {
+    //             $event->description = 'weekly'; 
+    //         }
+    //         //$event->description = 'weekly';      
+    //         $event->courseid = $COURSE->id;
+    //         $event->timestart = $fromform->fromsessiondate; // Change because of sessionsettings.
+    //         $event->groupid = 0;
+    //         //$teacherid = $DB->get_field('congrea_sessions', 'teacherid', array('id' => $sessionid));
+    //         $teacherid = $fromform->moderatorid;
+    //         $event->userid = $teacherid;
+    //         $event->modulename = 'congrea';
+    //         $event->instance = $congrea->id;
+    //         $event->eventtype = 'congrea';// TOdo
+    //         $timeduration = round($fromform->timeduration*60);
+    //         $event->timeduration = $timeduration;
+    //         $expecteddate = $event->timestart + $event->timeduration;
+    //         $eventid = $DB->insert_record('event', $event); // eventid variable is duplicates.
+    //     if (!empty($fromform->days)) {
+    //         //calendar_event::create($event);                       
+    //         //mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration, $congrea->id, $teacherid);
+    //         //$params = array('modulename' => 'congrea', 'instance' => $congrea->id, 'eventtype' => $sessionid);
+    //         //$eventid = $DB->get_field('event', 'id', $params);
+    //         $expecteddate = date(
+    //             'Y-m-d H:i:s',
+    //             strtotime(date('Y-m-d H:i:s', $fromform->fromsessiondate) . "+$countofweeks weeks")
+    //         );
+    //         $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $expecteddate, $daysnames);
+    //         foreach ($datelist as $startdate) {
+    //             //mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid, $eventid);
+    //             repeat_calendar($congrea, $eventid, $startdate, $congrea->id, $timeduration, $discription, $teacherid);
+    //         }
+    //     }
+    // }
+
+    //     $event->description = '';
+    //     $data->starttime = $fromform->fromsessiondate;
+    //     $durationinminutes = round($fromform->timeduration);
+    //     $expecteddate = strtotime(date('Y-m-d H:i:s', strtotime("+$durationinminutes minutes", $data->starttime)));
+    //     $data->endtime = $expecteddate;
+    //     $timeduration = round((abs($data->endtime - $data->starttime) / 60));
+    //     $data->repeatid = 0;
+    //     if (!empty($fromform->addmultiply)) {
+    //         //$data->repeatid = 0;
+    //         if (!empty($fromform->days)) {
+    //             $countofweeks = $fromform->period;
+    //             $prefix = $daylist = '';
+    //             foreach ($fromform->days as $keys => $daysname) {
+    //                 $daylist .= $prefix . '"' . $keys . '"';
+    //                 $prefix = ', ';
+    //             }
+    //             $daysnames = str_replace('"', '', $daylist);
+    //             $data->repeats = $countofweeks; 
+    //             $data->repeattype = 'weekly-'.str_replace('"', '', $daylist);
+    //         } else {
+    //             $data->repeattype = 'none';
+    //             $data->repeats = 0;
+    //         }
+    //     } else {
+    //         $data->repeats = 0;
+    //         $data->repeattype = 'none';
+    //     }
+    //     $data->teacherid = $fromform->moderatorid;
+    //     $data->congreaid = $congrea->id;
+    // }
+    
+//}
+// if (has_capability('mod/congrea:sessionesetting', $context)) {
+//     $mform->display();
+// }
 echo $OUTPUT->footer();

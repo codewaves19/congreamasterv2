@@ -25,6 +25,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
+require_once($CFG->dirroot . '/calendar/lib.php');
 
 define('NEXT_7_DAYS', 1);
 define('NEXT_30_DAYS', 2);
@@ -223,7 +224,7 @@ function congrea_online_server_play(
  *
  * @return bool
  */
-function mod_congrea_update_calendar($congrea, $startime, $endtime, $timeduration, $sessionid)
+function mod_congrea_update_calendar($congrea, $startime, $endtime, $timeduration, $congreaid, $teacherid)
 {
     global $DB, $CFG;
     require_once($CFG->dirroot . '/calendar/lib.php');
@@ -247,12 +248,12 @@ function mod_congrea_update_calendar($congrea, $startime, $endtime, $timeduratio
         //unset($event->id);
         $event->courseid = $congrea->course;
         $event->groupid = 0;
-        $teacherid = $DB->get_field('congrea_sessions', 'teacherid', array('id' => $sessionid));
+        //$teacherid = $DB->get_field('congrea_sessions', 'teacherid', array('id' => $sessionid));
         $event->userid = $teacherid;
         $event->modulename = 'congrea';
         $event->instance = $congrea->id;
-        $event->eventtype = $sessionid;
-        $event->timeduration = $timeduration * 60;
+        $event->eventtype = $congreaid;
+        $event->timeduration = $timeduration;
         calendar_event::create($event);
     } else {
         $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $congrea->id));
@@ -283,7 +284,7 @@ function mod_congrea_update_calendar_on_upgarde($congreaname, $startime, $endtim
         $event->modulename = 'congrea';
         $event->instance = $instanceid;
         $event->eventtype = $sessionid;
-        $event->timeduration = $timeduration * 60;
+        $event->timeduration = $timeduration;
         calendar_event::create($event);
     } else {
         $DB->delete_records('event', array('modulename' => 'congrea', 'instance' => $instanceid));
@@ -300,25 +301,25 @@ function mod_congrea_update_calendar_on_upgarde($congreaname, $startime, $endtim
  *
  * @return bool
  */
-function repeat_calendar($congrea, $eventid, $strattime, $sessionid, $timeduration)
+function repeat_calendar($congrea, $discription, $eventid = false, $strattime, $congreaid, $timeduration, $teacherid)
 {
     global $DB;
     $event = new stdClass();
     $event->name = $congrea->name;
+    $event->description = $discription;
     $event->timestart = strtotime($strattime);
     $event->format = 1;
     $event->courseid = $congrea->course;
     $event->groupid = 0;
-    $teacherid = $DB->get_field('congrea_sessions', 'teacherid', array('id' => $sessionid));
+    //$teacherid = $DB->get_field('congrea_sessions', 'teacherid', array('id' => $sessionid));
     $event->userid = $teacherid;
     $event->repeatid = $eventid;
     $event->modulename = 'congrea';
-    $event->instance = $congrea->id;
-    $event->eventtype = $sessionid; // schedule id.
-    $event->timeduration = $timeduration * 60;
+    $event->instance = $congreaid;
+    $event->eventtype = 'session start'; // schedule id.
+    $event->timeduration = $timeduration;
     calendar_event::create($event);
 }
-
 /**
  * Delete recoded files with folder.
  *
@@ -568,31 +569,6 @@ function congrea_get_enrolled_users($cmid, $courseid)
         json_encode($unsuccess);
     }
 }
-
-/**
- * Get user role.
- * serving for virtual class
- *
- * @param int $courseid
- * @param int $userid
- * @return int of user id
- */
-function get_role($courseid, $userid)
-{
-    $rolestr = array();
-    $adminrole = array();
-    $context = context_course::instance($courseid);
-    $roles = get_user_roles($context, $userid);
-    foreach ($roles as $role) {
-        $rolestr[] = role_get_name($role, $context);
-    }
-    if (!in_array("Student", $rolestr)) { // TODO.
-        return $userid; // Teacher.
-    } else {
-        return false;
-    }
-}
-
 /**
  * Get total session time.
  * serving for virtual class
@@ -823,20 +799,36 @@ function binarytohex($s)
  * @param int $days
  * @return array
  */
-function reapeat_date_list($startdate, $expecteddate, $days)
+function reapeat_date_list($startdate, $until, $days)
 {
+    //echo  $days; exit;
     $nextdate = array();
-    $listdays = str_replace('"', '', $days);
-    $dayslist = explode(", ", $listdays);
-    while (strtotime($startdate) < strtotime($expecteddate)) {
-        $startdate = date('Y-m-d H:i:s', strtotime("+1 days", strtotime($startdate)));
-        $nameofday = date('D', strtotime($startdate));
-        if (in_array($nameofday, $dayslist)) {
-            $nextdate[] = $startdate;
+    $dayslist = explode(", ", $days);
+    if($until > 1000) {
+        $expecteddate = date('Y-m-d H:i:s', $until);
+        while (strtotime($startdate) < strtotime($expecteddate)) {
+            $startdate = date('Y-m-d H:i:s', strtotime("+1 days", strtotime($startdate)));
+            $nameofday = date('D', strtotime($startdate));
+            if (in_array($nameofday, $dayslist)) {
+                $nextdate[] = $startdate;
+                //echo '<pre>'; print_r($nextdate); exit;
+            }
+        }
+    } else {
+        //$till = (int) filter_var($until, FILTER_SANITIZE_NUMBER_INT);
+        while (count($nextdate) < $until) {
+            $startdate = date('Y-m-d H:i:s', strtotime("+1 days", strtotime($startdate)));
+            $nameofday = date('D', strtotime($startdate));
+            if (in_array($nameofday, $dayslist)) {
+                $nextdate[] = $startdate;
+                //echo '<pre>'; print_r($nextdate); exit;
+            }
         }
     }
     return $nextdate;
 }
+
+
 
 /**
  * Returns array of between dates difference
@@ -894,17 +886,20 @@ function congrea_print_dropdown_form($id, $drodowndisplaymode)
  * @param object $congrea
  * @param int $type
  */
-function congrea_get_records($congrea, $type)
+function congrea_get_records($congrea, $type, $context, $cmid)
 {
-    global $DB, $OUTPUT;
+    global $DB, $OUTPUT, $CFG;
     $table = new html_table();
-    $table->head = array('Date and time', 'Time duration', 'Teacher name');
+    $table->head = array('Date and time', 'Time duration', 'Teacher name', 'Action');
     $timestart = time(); //current time
+    $returnurl = new moodle_url('/mod/congrea/view.php', array('id' => $cmid));
+    $editurl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cmid));
     $sql = "SELECT * FROM {event} where modulename = 'congrea' and instance = $congrea->id  and timestart >= $timestart ORDER BY timestart ASC LIMIT $type"; // To do.
     $sessionlist = $DB->get_records_sql($sql);
     if (!empty($sessionlist)) {
         foreach ($sessionlist as $list) {
             //echo $list->userid; exit;
+            $buttons = array();
             $row = array();
             $row[] = userdate($list->timestart);
             $row[] = round($list->timeduration / 60) . ' ' . 'Minutes';
@@ -915,6 +910,24 @@ function congrea_get_records($congrea, $type)
                 $username = get_string('nouser', 'mod_congrea');
             }
             $row[] = $username;
+            if (has_capability('mod/congrea:recordingdelete', $context)) { // TODO change permission.
+                $imageurl = "$CFG->wwwroot/mod/congrea/pix/edit.png";
+                $buttons[] = html_writer::link(new moodle_url($editurl, array(
+                    'edit' => $list->id,
+                    'sesskey' => sesskey()
+                )), html_writer::empty_tag('img', array(
+                    'src' => $imageurl,
+                    'alt' => 'edit', 'class' => 'iconsmall'
+                )), array('title' => 'edit'));
+            }
+            if (has_capability('mod/congrea:recordingdelete', $context)) {
+                $imageurl = "$CFG->wwwroot/mod/congrea/pix/delete.png";
+                $buttons[] = html_writer::empty_tag('img', array(
+                    'src' => $imageurl,
+                    'alt' => 'delete', 'class' => 'iconsmall'
+                ), array('title' => 'delete'));
+            }
+            $row[] = implode(' ', $buttons);
             $table->data[] = $row;
         }
         if (!empty($table->data)) {
@@ -957,16 +970,16 @@ function congrea_print_tabs($currenttab, $context, $cm, $congrea)
         ),
         get_string('psession', 'mod_congrea')
     );
-    if (has_capability('mod/congrea:sessionesetting', $context)) {
-        $row[] = new tabobject(
-            'sessionsettings',
-            new moodle_url(
-                '/mod/congrea/sessionsettings.php',
-                array('id' => $cm->id, 'sessionsettings' => $congrea->id)
-            ),
-            get_string('sessionsettings', 'mod_congrea')
-        );
-    }
+    // if (has_capability('mod/congrea:sessionesetting', $context)) {
+    //     $row[] = new tabobject(
+    //         'sessionsettings',
+    //         new moodle_url(
+    //             '/mod/congrea/sessionsettings.php',
+    //             array('id' => $cm->id, 'sessionsettings' => $congrea->id)
+    //         ),
+    //         get_string('sessionsettings', 'mod_congrea')
+    //     );
+    // }
     echo $OUTPUT->tabtree($row, $currenttab);
 }
 
@@ -1080,7 +1093,7 @@ function recording_view($uid, $recordingattendance)
                 }
                 $datapercent = round((($sum * 5) / ($recodingtime / 1000)) * 100);
             }
-            return $datapercent;
+            return (object) array('totalviewd' => round($sum * 5), 'totalviewedpercent' => $datapercent);
         }
     }
 }
@@ -1093,9 +1106,9 @@ function recording_view($uid, $recordingattendance)
  * @param object $recordingattendance
  * @return int.
  */
-// function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysname = false, $duration = false, $edit = false) {
+// function check_conflicts($congrea, $startdate, $enddate, $daysname = false, $duration = false, $edit = false) {
 //     global $DB;
-//     if (!$repeat) {
+//     if (!$daysname) {
 //         if($edit) {
 //             $result = $DB->get_records_sql('SELECT * FROM {congrea_sessions} WHERE congreaid = ? AND id != ?', 
 //                             [$congrea, $edit]);
@@ -1158,13 +1171,222 @@ function recording_view($uid, $recordingattendance)
 //     }
 // }
 
-function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysname = false, $duration = false, $edit = false)
+// function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysname = false, $duration = false, $edit = false)
+// {
+//     global $DB;
+//     if (!$repeat) {
+//         if ($edit) {
+//             $result = $DB->get_records_sql(
+//                 'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And eventtype != ?',
+//                 [$congrea, 'congrea', $edit]
+//             );
+//         } else {
+//             $result = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
+//         }
+//         if (!empty($result)) {
+//             foreach ($result as $data) {
+//                 $stime = $data->timestart; // DB start time.
+//                 $dbduration = round($data->timeduration / 60);
+//                 $starttime = date("Y-m-d H:i:s", $stime);
+//                 $dataendtime = strtotime(date('Y-m-d H:i:s', strtotime("+$dbduration minutes", strtotime($starttime)))); // DB Enddate.
+//                 if (
+//                     $data->timestart <= $startdate && $dataendtime >= $startdate ||
+//                     $data->timestart <= $enddate && $dataendtime >= $enddate ||
+//                     $data->timestart >= $startdate && $dataendtime <= $enddate
+//                 ) {
+//                     return true; // conflicts
+//                 }
+//             }
+//         } else {
+//             return false;
+//         }
+//     } else {
+//         $expecteddate = date(
+//             'Y-m-d H:i:s',
+//             strtotime(date('Y-m-d H:i:s', $startdate) . "+$repeat weeks")
+//         );
+//         $datelist = repeat_date_list_check(date('Y-m-d H:i:s', $startdate), $expecteddate, $daysname, $duration);
+//         //echo '<pre>'; print_r($datelist); exit;
+//         if (!empty($datelist)) {
+//             $starttime = date("Y-m-d H:i:s", $startdate);
+//             $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime))); // DB Enddate.
+//             //array_unshift($datelist, $fromdate);
+//             $fromdate = (object) array('sheduledstarttime' => date('Y-m-d H:i:s', $startdate), 'sheduledendttime' => $endtime);
+//             array_unshift($datelist, $fromdate);
+//             if ($edit) {
+//                 $sheduleddata = $DB->get_records_sql(
+//                     'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And eventtype != ?',
+//                     [$congrea, 'congrea', $edit]
+//                 );
+//             } else {
+//                 $sheduleddata = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
+//             }
+//             //$sheduleddata = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
+//             //echo '<pre>'; print_r($sheduleddata); exit;
+//             foreach ($datelist as $list) { // Calculated data.
+//                 //echo '<pre>'; print_r($list); exit;
+//                 //echo $list->sheduledstarttime; exit;
+//                 $liststartdate = $list->sheduledstarttime;
+//                 $listenddate = $list->sheduledendttime;
+//                 //echo strtotime($list->startdate); exit;
+//                 foreach ($sheduleddata as $data) { // DB data. 
+//                     $stime = $data->timestart; // DB start time.
+//                     $rdbduration = round($data->timeduration / 60);
+//                     $starttime = date("Y-m-d H:i:s", $stime);
+//                     $endtime = strtotime(date('Y-m-d H:i:s', strtotime("+$rdbduration minutes", strtotime($starttime)))); // DB Enddate.
+//                     //echo strtotime($list->startdate); exit;
+//                     if (
+//                         $stime <= $liststartdate && $endtime >= $liststartdate ||
+//                         $stime <= $listenddate && $endtime >= $listenddate ||
+//                         $stime >= $liststartdate && $endtime <= $listenddate
+//                     ) {
+//                         return true;
+//                         break;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
+
+// function check_conflicts($congrea, $unixstarttime, $unixendtime, $daysname = false, $duration = false, $edit = false)
+// {
+//     global $DB;
+//     if (!$daysname) {
+//         if ($edit) {
+//             $result = $DB->get_records_sql(
+//                 'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And eventtype != ?',
+//                 [$congrea, 'congrea', $edit]
+//             );
+//         } else {
+//             $result = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
+//         }
+//         if (!empty($result)) {
+//             foreach ($result as $data) {
+//                 $dbstarttime = $data->timestart;
+//                 $dbendtime = $data->timestart + $data->timeduration;
+//                 if (
+//                     $dbstarttime <= $unixstarttime && $dbendtime >= $unixstarttime ||
+//                     $dbstarttime <= $unixendtime && $dbendtime >= $unixendtime ||
+//                     $dbstarttime >= $unixstarttime && $dbendtime <= $unixendtime
+//                 ) {
+//                     return true; // conflicts.
+//                 }
+//             }
+//         } else {
+//             return false;
+//         }
+//     } else {
+//         $expecteddate = date(
+//             'Y-m-d H:i:s',
+//             strtotime(date('Y-m-d H:i:s', $unixstarttime) . "+$countofweeks weeks")
+//         );
+//         //echo $expecteddate; exit;
+//         //repeat_date_list_check(date('Y-m-d H:i:s', $unixstarttime), $expecteddate, $daysname, $duration);
+//         $sheduledlist = repeat_date_list_check(date('Y-m-d H:i:s', $unixstarttime), $expecteddate, $daysname, $duration);
+//         //echo '<pre>'; print_r($sheduledlist); exit;
+//         if (!empty($sheduledlist)) {
+//             $currenttime = (object) array('sheduledstarttime' => $unixstarttime, 'sheduledendttime' => ($unixstarttime + ($duration * 60)));
+//             array_unshift($sheduledlist, $currenttime);
+//             if ($edit) {
+//                 $dbsheduled = $DB->get_records_sql(
+//                     'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And eventtype != ?',
+//                     [$congrea, 'congrea', $edit]
+//                 );
+//             } else {
+//                 $dbsheduled = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
+//             }
+//             foreach ($sheduledlist as $list) { // Calculated data.
+//                 $sheduledstarttime = $list->sheduledstarttime;
+//                 $sheduledendttime =  $list->sheduledendttime;
+//                 foreach ($dbsheduled as $data) { // DB data. 
+//                     $dbsheduledstarttime = $data->timestart;
+//                     $dbsheduledendtime = $data->timestart + $data->timeduration;
+//                     if (
+//                         $dbsheduledstarttime <= $sheduledstarttime && $dbsheduledendtime >= $sheduledstarttime ||
+//                         $dbsheduledstarttime <= $sheduledendttime && $dbsheduledendtime >= $sheduledendttime ||
+//                         $dbsheduledstarttime >= $sheduledstarttime && $dbsheduledendtime <= $sheduledendttime
+//                     ) {
+//                         return true;
+//                         break;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
+
+
+// function check_conflicts1($congrea, $unixstarttime, $unixendtime, $expecteddate, $daysname = false, $duration = false, $edit = false)
+// {
+//     global $DB;
+//     if (!$daysname) {
+//         if ($edit) {
+//             $result = $DB->get_records_sql(
+//                 'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And eventtype != ?',
+//                 [$congrea, 'congrea', $edit]
+//             );
+//         } else {
+//             $result = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
+//         }
+//         if (!empty($result)) {
+//             foreach ($result as $data) {
+//                 $dbstarttime = $data->timestart;
+//                 $dbendtime = $data->timestart + $data->timeduration;
+//                 if (
+//                     $dbstarttime <= $unixstarttime && $dbendtime >= $unixstarttime ||
+//                     $dbstarttime <= $unixendtime && $dbendtime >= $unixendtime ||
+//                     $dbstarttime >= $unixstarttime && $dbendtime <= $unixendtime
+//                 ) {
+//                     return true; // conflicts.
+//                 }
+//             }
+//         } else {
+//             return false;
+//         }
+//     } else {
+//         //echo $expecteddate; exit;
+//         //repeat_date_list_check(date('Y-m-d H:i:s', $unixstarttime), $expecteddate, $daysname, $duration);
+//         $sheduledlist = repeat_date_list_check(date('Y-m-d H:i:s', $unixstarttime), $expecteddate, $daysname, $duration);
+//         //echo '<pre>'; print_r($sheduledlist); exit;
+//         if (!empty($sheduledlist)) {
+//             $currenttime = (object) array('sheduledstarttime' => $unixstarttime, 'sheduledendttime' => ($unixstarttime + ($duration * 60)));
+//             array_unshift($sheduledlist, $currenttime);
+//             if ($edit) {
+//                 $dbsheduled = $DB->get_records_sql(
+//                     'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And eventtype != ?',
+//                     [$congrea, 'congrea', $edit]
+//                 );
+//             } else {
+//                 $dbsheduled = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
+//             }
+//             foreach ($sheduledlist as $list) { // Calculated data.
+//                 $sheduledstarttime = $list->sheduledstarttime;
+//                 $sheduledendttime =  $list->sheduledendttime;
+//                 foreach ($dbsheduled as $data) { // DB data. 
+//                     $dbsheduledstarttime = $data->timestart;
+//                     $dbsheduledendtime = $data->timestart + $data->timeduration;
+//                     if (
+//                         $dbsheduledstarttime <= $sheduledstarttime && $dbsheduledendtime >= $sheduledstarttime ||
+//                         $dbsheduledstarttime <= $sheduledendttime && $dbsheduledendtime >= $sheduledendttime ||
+//                         $dbsheduledstarttime >= $sheduledstarttime && $dbsheduledendtime <= $sheduledendttime
+//                     ) {
+//                         return true;
+//                         break;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
+
+function check_conflicts1($congrea, $unixstarttime, $unixendtime, $expecteddate, $daysname = false, $duration = false, $edit = false)
 {
     global $DB;
-    if (!$repeat) {
+    if (!$daysname) {
         if ($edit) {
             $result = $DB->get_records_sql(
-                'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And eventtype != ?',
+                'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And id != ?',
                 [$congrea, 'congrea', $edit]
             );
         } else {
@@ -1172,69 +1394,221 @@ function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysn
         }
         if (!empty($result)) {
             foreach ($result as $data) {
-                $stime = $data->timestart; // DB start time.
-                $dbduration = round($data->timeduration / 60);
-                $starttime = date("Y-m-d H:i:s", $stime);
-                $dataendtime = strtotime(date('Y-m-d H:i:s', strtotime("+$dbduration minutes", strtotime($starttime)))); // DB Enddate.
+                $dbstarttime = $data->timestart;
+                $dbendtime = $data->timestart + $data->timeduration;
                 if (
-                    $data->timestart <= $startdate && $dataendtime >= $startdate ||
-                    $data->timestart <= $enddate && $dataendtime >= $enddate ||
-                    $data->timestart >= $startdate && $dataendtime <= $enddate
+                    $dbstarttime <= $unixstarttime && $dbendtime >= $unixstarttime ||
+                    $dbstarttime <= $unixendtime && $dbendtime >= $unixendtime ||
+                    $dbstarttime >= $unixstarttime && $dbendtime <= $unixendtime
                 ) {
-                    return true; // conflicts
+                    return true; // conflicts.
                 }
             }
         } else {
             return false;
         }
     } else {
-        $expecteddate = date(
-            'Y-m-d H:i:s',
-            strtotime(date('Y-m-d H:i:s', $startdate) . "+$repeat weeks")
-        );
-        $datelist = repeat_date_list_check(date('Y-m-d H:i:s', $startdate), $expecteddate, $daysname, $duration);
-        //echo '<pre>'; print_r($datelist); exit;
-        if (!empty($datelist)) {
-            $starttime = date("Y-m-d H:i:s", $startdate);
-            $endtime = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime))); // DB Enddate.
-            //array_unshift($datelist, $fromdate);
-            $fromdate = (object) array('startdate' => date('Y-m-d H:i:s', $startdate), 'enddate' => $endtime);
-            array_unshift($datelist, $fromdate);
+        $sheduledlist = repeat_date_list_check(date('Y-m-d H:i:s', $unixstarttime), date('Y-m-d H:i:s', $expecteddate), $daysname, $duration);
+        if (!empty($sheduledlist)) {
+            $currenttime = (object) array('sheduledstarttime' => $unixstarttime, 'sheduledendttime' => ($unixstarttime + ($duration * 60)));
+            array_unshift($sheduledlist, $currenttime);
             if ($edit) {
-                $sheduleddata = $DB->get_records_sql(
-                    'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And eventtype != ?',
+                $dbsheduled = $DB->get_records_sql(
+                    'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And repeatid != ?',
                     [$congrea, 'congrea', $edit]
                 );
             } else {
-                $sheduleddata = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
+                $dbsheduled = $DB->get_records_sql(
+                    'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And timestart >= ?',
+                    [$congrea, 'congrea', time()] // Only get future data not past data.
+                );
             }
-            //$sheduleddata = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
-            //echo '<pre>'; print_r($sheduleddata); exit;
-            foreach ($datelist as $list) { // Calculated data.
-                $liststartdate = strtotime($list->startdate);
-                $listenddate = strtotime($list->enddate);
-                //echo strtotime($list->startdate); exit;
-                foreach ($sheduleddata as $data) { // DB data. 
-                    $stime = $data->timestart; // DB start time.
-                    $rdbduration = round($data->timeduration / 60);
-                    $starttime = date("Y-m-d H:i:s", $stime);
-                    $endtime = strtotime(date('Y-m-d H:i:s', strtotime("+$rdbduration minutes", strtotime($starttime)))); // DB Enddate.
-                    //echo strtotime($list->startdate); exit;
-                    if (
-                        $stime <= $liststartdate && $endtime >= $liststartdate ||
-                        $stime <= $listenddate && $endtime >= $listenddate ||
-                        $stime >= $liststartdate && $endtime <= $listenddate
-                    ) {
-                        return true;
-                        break;
-                    }
-                }
+            foreach ($dbsheduled as $data) { // DB data.
+                $dbsheduledstarttime = $data->timestart;
+                $dbsheduledendtime = $data->timestart + $data->timeduration;
+                $dbsheduledlist[] = (object) array('sheduledstarttime' => $dbsheduledstarttime, 'sheduledendttime' => $dbsheduledendtime, 'dbdata'=> 'old');
             }
+            $allsheduledlist = array_merge($sheduledlist, $dbsheduledlist);
+            sort($allsheduledlist);
+            $i=0;
+            while($i<=count($allsheduledlist)) {
+            $index1=0;
+            $index2=1;
+            if($allsheduledlist[$index1]->sheduledendttime <= $allsheduledlist[$index2]->sheduledstarttime ||
+               $allsheduledlist[$index2]->sheduledendttime <= $allsheduledlist[$index1]->sheduledstarttime) {
+                return true;
+                break;
+                
+            }
+            $index1++;
+            $index2++;
+            $i++;
+        }
         }
     }
 }
 
 
+function check_conflicts2($congrea, $unixstarttime, $unixendtime, $expecteddate, $daysname = false, $duration = false, $edit = false)
+{
+    global $DB;
+    if (!$daysname) {
+        if ($edit) {
+            $result = $DB->get_records_sql(
+                'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And id != ?',
+                [$congrea, 'congrea', $edit]
+            );
+        } else {
+            $result = $DB->get_records('event', array('instance' => $congrea, 'modulename' => 'congrea'));
+        }
+        if (!empty($result)) {
+            foreach ($result as $data) {
+                $dbstarttime = $data->timestart;
+                $dbendtime = $data->timestart + $data->timeduration;
+                if (
+                    $dbstarttime <= $unixstarttime && $dbendtime >= $unixstarttime ||
+                    $dbstarttime <= $unixendtime && $dbendtime >= $unixendtime ||
+                    $dbstarttime >= $unixstarttime && $dbendtime <= $unixendtime
+                ) {
+                    return true; // conflicts.
+                }
+            }
+        } else {
+            return false;
+        }
+    } else {
+        $sheduledlist = repeat_date_list_check(date('Y-m-d H:i:s', $unixstarttime), date('Y-m-d H:i:s', $expecteddate), $daysname, $duration);
+        if (!empty($sheduledlist)) {
+            $currenttime = (object) array('sheduledstarttime' => $unixstarttime, 'sheduledendttime' => ($unixstarttime + ($duration * 60)), 'current' => 'current');
+            array_unshift($sheduledlist, $currenttime);
+            if ($edit) {
+                $dbsheduled = $DB->get_records_sql(
+                    'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And repeatid != ?',
+                    [$congrea, 'congrea', $edit]
+                );
+            } else {
+                $dbsheduled = $DB->get_records_sql(
+                    'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And timestart >= ?',
+                    [$congrea, 'congrea', time()] // Only get future data not past data.
+                );
+            }
+            foreach ($dbsheduled as $data) { // DB data.
+                $dbsheduledstarttime = $data->timestart;
+                $dbsheduledendtime = $data->timestart + $data->timeduration;
+                $dbsheduledlist[] = (object) array('sheduledstarttime' => $dbsheduledstarttime, 'sheduledendttime' => $dbsheduledendtime, 'old' => 'old');
+            }
+            if (empty($dbsheduledlist)) {
+                return false; // NO conflicts.                
+            }
+            $allsheduledlist = array_merge($sheduledlist, $dbsheduledlist);
+            sort($allsheduledlist);
+            //echo '<pre>'; print_r($allsheduledlist); exit;
+            $conflicts = array();
+            for ($i = 0; $i < count($allsheduledlist)-1; $i++) {
+                for ($j = $i + 1; $j < count($allsheduledlist); $j++) {
+                    //if (!empty($allsheduledlist[$i]->current) && !empty($allsheduledlist[$i]->old) && $allsheduledlist[$i]->current !== 'current' && $allsheduledlist[$j]->old !== 'old') {
+                        //continue;
+                        if ($allsheduledlist[$i]->sheduledendttime > $allsheduledlist[$j]->sheduledstarttime) {
+                            //$conflicts = array();
+                            //$conflicts[] = $allsheduledlist[$j]->sheduledstarttime;
+                            return true;
+                            //   if (eventsArray[i].conflicts == undefined) {
+                            //     eventsArray[i].conflicts = [];
+                            //   }
+                            //   if (eventsArray[j].conflicts == undefined) {
+                            //     eventsArray[j].conflicts = [];
+                            //   }
+                            //eventsArray[i].conflicts[eventsArray[i].conflicts.length] = j;
+                            //eventsArray[j].conflicts[eventsArray[j].conflicts.length] = i;
+                        } else {
+                            break;
+                        }
+                    //}
+                }
+            }
+            //echo '<pre>'; print_r($conflicts); exit;
+
+            //     $i=0;
+            //     while($i<=count($allsheduledlist)) {
+            //     $index1=0;
+            //     $index2=1;
+            //     if($allsheduledlist[$index1]->sheduledendttime <= $allsheduledlist[$index2]->sheduledstarttime ||
+            //        $allsheduledlist[$index2]->sheduledendttime <= $allsheduledlist[$index1]->sheduledstarttime) {
+            //         return true;
+            //         break;
+
+            //     }
+            //     $index1++;
+            //     $index2++;
+            //     $i++;
+            // }
+        }
+    }
+}
+
+
+function check_conflicts3($congrea, $unixstarttime, $unixendtime, $until = false, $daysname = false, $duration = false, $edit = false)
+{
+    global $DB;
+    $sheduledlist = array();
+    if(!$daysname) {
+        $sheduledlist[] = (object) array('sheduledstarttime' => $unixstarttime, 'sheduledendttime' => $unixendtime, 'current' => 'current');
+        //echo '<pre>'; print_r($sheduledlist); exit;
+    } else {
+        $sheduledlist = repeat_date_list_check(date('Y-m-d H:i:s', $unixstarttime), $until, $daysname, $duration);
+        if($until > 1000) {
+            $currenttime = (object) array('sheduledstarttime' => $unixstarttime, 'sheduledendttime' => ($unixstarttime + ($duration * 60)), 'current' => 'current');
+            array_unshift($sheduledlist, $currenttime);
+        }
+    }
+    if ($edit) {
+        if(!$daysname) { // Single Event.
+        $dbsheduled = $DB->get_records_sql(
+                'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And id != ? And timeduration > ?',
+                [$congrea, 'congrea', $edit, 0]
+            );
+        } else { // Repeat.
+            $dbsheduled = $DB->get_records_sql(
+                'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And repeatid != ? And timeduration > ?',
+                [$congrea, 'congrea', $edit, 0]
+            );
+        }
+    } else { // Without edit.
+        $dbsheduled = $DB->get_records_sql(
+            'SELECT * FROM {event} WHERE instance = ? AND modulename = ? And timeduration > ?',
+            [$congrea, 'congrea', 0] // Only get future data not past data.
+        );
+    }
+    if (!empty($dbsheduled)) {          
+        foreach ($dbsheduled as $data) { // DB data.
+            $dbsheduledstarttime = $data->timestart;
+            $dbsheduledendtime = $data->timestart + $data->timeduration;
+            $dbsheduledlist[] = (object) array('sheduledstarttime' => $dbsheduledstarttime, 'sheduledendttime' => $dbsheduledendtime, 'old' => 'old');
+        }
+        //echo '<pre>'; print_r($sheduledlist); exit;
+        $allsheduledlist = array_merge($sheduledlist, $dbsheduledlist);
+        sort($allsheduledlist);
+        //echo '<pre>'; print_r($allsheduledlist); exit;
+        $conflicts = array();
+            for ($i = 0; $i < count($allsheduledlist)-1; $i++) {
+                for ($j = $i + 1; $j < count($allsheduledlist); $j++) {
+                    //if (($allsheduledlist[$i]->old == 'old' && $allsheduledlist[$j]->current == 'current') || ($allsheduledlist[$i]->current == 'current' && $allsheduledlist[$j]->old == 'old')) {
+                        //continue;
+                        if ($allsheduledlist[$i]->sheduledendttime > $allsheduledlist[$j]->sheduledstarttime) {
+                            $conflicts[] = $allsheduledlist[$i]->sheduledstarttime;
+                            //return true;
+                        } else {
+                            break;
+                        }
+                    //}
+                }
+            }
+            return $conflicts;
+            //echo '<pre>'; print_r($conflicts); exit;
+    } else {
+        return false; // NO conflicts.
+    }
+}
 /**
  * Returns array of between dates difference
  * @param int $startdate
@@ -1242,21 +1616,60 @@ function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysn
  * @param int $days
  * @return array
  */
-function repeat_date_list_check($startdate, $expecteddate, $days, $duration)
+// function repeat_date_list_check($startdate, $expecteddate, $days, $duration)
+// {
+//     //$nextdate = array();
+//     if (!empty($days)) {
+//         $listdays = str_replace('"', '', $days);
+//         $dayslist = explode(", ", $listdays);
+//         while (strtotime($startdate) < strtotime($expecteddate)) {
+//             $startdate = date('Y-m-d H:i:s', strtotime("+1 days", strtotime($startdate)));
+//             $nameofday = date('D', strtotime($startdate));
+//             if (in_array($nameofday, $dayslist)) {
+//                 $starttime = date("Y-m-d H:i:s", strtotime($startdate));
+//                 $enddate = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime))); // DB Enddate.
+//                 $nextdate[] = (object) array('startdate' => $startdate, 'enddate' => $enddate);
+//             }
+//         }
+//         return $nextdate;
+//     }
+// }
+/**
+ * Returns array of between dates difference
+ * @param int $startdate
+ * @param int $expecteddate
+ * @param int $days
+ * @return array
+ */
+function repeat_date_list_check($unixstarttime, $until, $days, $duration)
 {
-    //$nextdate = array();
-    if (!empty($days)) {
-        $listdays = str_replace('"', '', $days);
-        $dayslist = explode(", ", $listdays);
-        while (strtotime($startdate) < strtotime($expecteddate)) {
-            $startdate = date('Y-m-d H:i:s', strtotime("+1 days", strtotime($startdate)));
-            $nameofday = date('D', strtotime($startdate));
+    $nextdate = array();
+    $dayslist = explode(", ", $days);
+    //if (!empty($days)) {
+        if($until > 1000) {
+        $expecteddate = date('Y-m-d H:i:s', $until); 
+        //$dayslist = explode(", ", $days);
+        while (strtotime($unixstarttime) < strtotime($expecteddate)) {
+            $unixstarttime = date('Y-m-d H:i:s', strtotime("+1 days", strtotime($unixstarttime)));
+            $nameofday = date('D', strtotime($unixstarttime));
             if (in_array($nameofday, $dayslist)) {
-                $starttime = date("Y-m-d H:i:s", strtotime($startdate));
-                $enddate = date('Y-m-d H:i:s', strtotime("+$duration minutes", strtotime($starttime))); // DB Enddate.
-                $nextdate[] = (object) array('startdate' => $startdate, 'enddate' => $enddate);
+                $sheduledstarttime =  strtotime($unixstarttime);
+                $sheduledendttime = ($sheduledstarttime + ($duration * 60));
+                $nextdate[] = (object) array('sheduledstarttime' => $sheduledstarttime, 'sheduledendttime' => $sheduledendttime, 'current' => 'current');
             }
         }
-        return $nextdate;
+    } else {
+        while (count($nextdate) < $until) {
+            $unixstarttime = date('Y-m-d H:i:s', strtotime("+1 days", strtotime($unixstarttime)));
+            $nameofday = date('D', strtotime($unixstarttime));
+            if (in_array($nameofday, $dayslist)) {
+                $sheduledstarttime =  strtotime($unixstarttime);
+                $sheduledendttime = ($sheduledstarttime + ($duration * 60));
+                $nextdate[] = (object) array('sheduledstarttime' => $sheduledstarttime, 'sheduledendttime' => $sheduledendttime, 'current' => 'current');
+            }
+        }
+        
     }
+        return $nextdate;
+    //}
 }

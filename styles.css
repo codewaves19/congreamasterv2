@@ -9,6 +9,11 @@
     border-radius: 5px;
 }
 
+#page-mod-congrea-view .wrapper-button .singlebutton {
+    float: right;
+    margin-right: 15px;
+}
+
 #page-mod-congrea-view .wrapper-record-list {
     text-align: left;
     padding: 15px 10px;

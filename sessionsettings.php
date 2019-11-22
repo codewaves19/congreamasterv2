@@ -50,9 +50,10 @@ if ($id) {
 }
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
-$returnurl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true));
+$returnurl = new moodle_url('/mod/congrea/view.php', array('id' => $cm->id));
+$settingsreturnurl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'action' => 'addsession'));
 // Print the page header.
-$PAGE->set_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => $sessionsettings));
+$PAGE->set_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'action' => 'addsession'));
 $PAGE->set_title(format_string($congrea->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_context($context);
@@ -60,8 +61,8 @@ $PAGE->set_context($context);
 if ($delete) {
     require_login($course, false, $cm);
     //$modcontext = context_module::instance($cm->id);
-    $submiturl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => $sessionsettings));
-    $returnurl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => $sessionsettings));
+    $submiturl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'upcomingsession' => $sessionsettings));
+    $returnurl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'upcomingsession' => $sessionsettings));
     if ($confirm != $delete) {
         echo $OUTPUT->header();
         echo $OUTPUT->heading(format_string($congrea->name));
@@ -74,178 +75,227 @@ if ($delete) {
         echo $OUTPUT->footer();
         die;
     } else if (data_submitted()) {
-        $DB->delete_records('congrea_sessions', array('id' => $delete));
-        $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $delete));
+        $DB->delete_records('event', array('repeatid' => $delete, 'modulename' => 'congrea'));
+        //$DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $delete));
     }
 }
-//$editconflict = false;
-$mform = new mod_congrea_session_form(null, array('id' => $id, 'sessionsettings' => $sessionsettings, 'edit' => $edit, 'action' => $action, 'congreaid' => $congrea->id));
-if ($mform->is_cancelled()) {
-    // Do nothing.
-    redirect(new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true)));
-} else if ($fromform = $mform->get_data()) {
-    $data = new stdClass();
-    $data->starttime = $fromform->fromsessiondate;
-    $durationinminutes = round($fromform->timeduration / 60);
-    $expecteddate = strtotime(date('Y-m-d H:i:s', strtotime("+$durationinminutes minutes", $data->starttime)));
-    $data->endtime = $expecteddate;
-    $timeduration = round((abs($data->endtime - $data->starttime) / 60));
-    $data->timeduration = $timeduration;
-    if (!empty($fromform->addmultiply)) {
-        $data->isrepeat = $fromform->addmultiply;
-        $data->repeattype = $fromform->period;
+    $mform = new mod_congrea_session_form(null, array('id' => $id, 'action' => $action, 'congreaid' => $congrea->id, 'edit' => $edit));
+    if ($mform->is_cancelled()) {
+        // Do nothing.
+        redirect(new moodle_url('/mod/congrea/view.php', array('id' => $id)));
+    } else if ($fromform = $mform->get_data()) {
+        //echo '<pre>'; print_r($fromform); exit;
+        $event = new stdClass();
+        $event->name = $congrea->name;
+        //echo $fromform->allowconflicts; exit;
+        if (!empty($fromform->addmultiply)) { // Repeat sessions.
+            if($fromform->radiogroup['repeattill'] == 1) { // Repeattill.
+                $until = $fromform->radiogroup['repeatdatetill'];
+            } else {
+                $until = $fromform->radiogroup['occurances'];
+            }
+            if (!empty($fromform->days)) {
+                 $prefix = $daylist = '';
+                 foreach ($fromform->days as $keys => $daysname) {
+                     $daylist .= $prefix . '"' . $keys . '"';
+                     $prefix = ', ';
+                 }
+                 $daysnames = str_replace('"', '', $daylist);
+                 $description = $until.' weekly : '.$daysnames;
+                 $event->description = $until.' weekly : '.$daysnames;
+            }
+        } else { // Single Event.
+            $until = false;
+            $event->description = 'Single session';
+            $daysnames = false; 
+        }
+        $event->courseid = $COURSE->id;
+        $event->timestart = $fromform->fromsessiondate; // Change because of sessionsettings.
+        $event->groupid = 0;
+        $teacherid = $fromform->moderatorid;
+        $event->userid = $teacherid;
+        $event->modulename = 'congrea';
+        $event->instance = $congrea->id;
+        $event->eventtype = 'session start';// TODO:
+        $timeduration = round($fromform->timeinminutes*60);
+        $event->timeduration = $timeduration;
+        $endtime = ($fromform->fromsessiondate + $timeduration);
+        $conflictstatus = check_conflicts3($congrea->id, $fromform->fromsessiondate, $endtime, $until, $daysnames, $timeduration, $edit);
+        if(!empty($conflictstatus) and empty($fromform->allowconflicts)) {
+            //$conflictmsg = '';
+            foreach($conflictstatus as $conflictsdate) {
+                //echo '<pre>'; print_r($conflictsdate); exit;
+                //$conflictmsg .= userdate($conflictsdate);
+                \core\notification::warning(userdate($conflictsdate));                
+                //\core\notification::warning($conflictsdate);
+            }
+            //redirect($settingsreturnurl);
+            echo $OUTPUT->header();
+            echo $OUTPUT->heading(format_string($congrea->name));
+            $mform->set_data($event);
+            if (has_capability('mod/congrea:sessionesetting', $context)) {
+                $mform->display();
+            }
+            echo $OUTPUT->footer();
+            return false;
+        }
+        if(!$edit) {
+        if(empty($fromform->radiogroup['occurances'])) {
+            $eventobject = calendar_event::create($event);
+            $eventid = $eventobject->id; // TODO: -using api return id.
+        }
         if (!empty($fromform->days)) {
-            $prefix = $daylist = '';
-            foreach ($fromform->days as $keys => $daysname) {
-                $daylist .= $prefix . '"' . $keys . '"';
-                $prefix = ', ';
+        if(empty($fromform->radiogroup['occurances'])) {
+            $dataobject = new stdClass();
+            $dataobject->repeatid = $eventid;
+            $dataobject->id = $eventid;
+            $DB->update_record('event', $dataobject);
+        }
+        $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $until, $daysnames);
+        if(!empty($fromform->radiogroup['occurances'])) {
+            $event->timestart = strtotime($datelist[0]);
+            //echo $event->timestart; exit;
+            $eventobject = calendar_event::create($event);
+            $eventid = $eventobject->id; // TODO: -using api return id.
+            $dataobject = new stdClass();
+            $dataobject->repeatid = $eventid;
+            $dataobject->id = $eventid;
+            $DB->update_record('event', $dataobject); 
+            array_shift($datelist);
+        }
+        foreach ($datelist as $startdate) {
+            repeat_calendar($congrea, $description, $eventid, $startdate, $congrea->id, $timeduration, $teacherid);
+        } 
+    }
+    } else { // Handle edit cases.
+        if($fromform->sessionstatus == 'changesessiononly') {
+            if($fromform->fromsessiondate < time()) {
+                echo 'Past events cannot be changed'; // TODO: instring file.
+            } else {
+                $DB->delete_records('event', array('modulename' => 'congrea', 'id' => $edit));
+                calendar_event::create($event);
             }
-            $data->additional = str_replace('"', '', $daylist);
-        } else {
-            $data->additional = 'none';
-        }
-    } else {
-        $data->isrepeat = 0;
-        $data->repeattype = 0;
-        $data->additional = 'none';
-    }
-    $data->teacherid = $fromform->moderatorid;
-    $data->congreaid = $congrea->id;
-    if ($action == 'addsession') {
-        $sessionid = $DB->insert_record('congrea_sessions', $data); // Insert record in congrea table.
-        if(empty($fromform->period)) { // No repeat.
-            mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration, $sessionid);
-        }
-    }
-    if ($edit) { // Handle edit condition of schedule.
-        //$sessionid = $edit;
-        //$data->id = $edit;
-        $conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration, $edit);
-        if(!$conflictstatus) {
-            $sessionid = $DB->insert_record('congrea_sessions', $data);
-            if($sessionid) {
-                if(empty($fromform->period)) { // No repeat.
-                    mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid);
+
+        } else if($fromform->sessionstatus == 'changeallsession') {
+            if($fromform->fromsessiondate < time()) {
+                echo 'Past events cannot be changed';
+            } else {
+                $repeatid = $DB->get_field('event', 'repeatid', array('modulename' => 'congrea', 'id' => $edit));
+                if($repeatid) {
+                    $whereclause1 = "modulename = ? AND repeatid = ? AND timestart > ?";
+                    $DB->delete_records_select('event', $whereclause1, array('congrea', $repeatid, time()));
+                } else {
+                    $whereclause = "modulename = ? AND id = ? AND timestart > ?";
+                    $DB->delete_records_select('event', $whereclause, array('congrea', $edit, time()));
                 }
-                $DB->delete_records('congrea_sessions', array('id' => $edit));
-                $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $edit));
+                if(empty($fromform->radiogroup['occurances'])) {
+                    $eventobject = calendar_event::create($event);
+                    $eventid = $eventobject->id;
+                    $dataobject = new stdClass();
+                    $dataobject->repeatid = $eventid;
+                    $dataobject->id = $eventid;
+                    $DB->update_record('event', $dataobject);
+                }
+                if (!empty($fromform->days)) {
+                    $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $until, $daysnames);
+                    if(!empty($fromform->radiogroup['occurances'])) {
+                        $event->timestart = strtotime($datelist[0]);
+                        $eventobject = calendar_event::create($event);
+                        $eventid = $eventobject->id; // TODO: -using api return id.
+                        $dataobject = new stdClass();
+                        $dataobject->repeatid = $eventid;
+                        $dataobject->id = $eventid;
+                        $DB->update_record('event', $dataobject); 
+                        array_shift($datelist);
+                    }                    
+                    foreach ($datelist as $startdate) {
+                        repeat_calendar($congrea, $description, $eventid, $startdate, $congrea->id, $timeduration, $teacherid);
+                    } 
+                }
             }
-        } else {
-            echo 'conflicts in dates';
-        }
-    }
-    if (!empty($fromform->addmultiply)) {
-        if ($fromform->period > 0) { // Here need to calculate repeate dates.
-            $params = array('modulename' => 'congrea', 'instance' => $congrea->id, 'eventtype' => $sessionid);
-            $eventid = $DB->get_field('event', 'id', $params);
-            $expecteddate = date(
-                'Y-m-d H:i:s',
-                strtotime(date('Y-m-d H:i:s', $fromform->fromsessiondate) . "+$fromform->period weeks")
-            );
-            $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $expecteddate, $data->additional);
-            $fromdate = date('Y-m-d H:i:s', $fromform->fromsessiondate);
-            array_unshift($datelist, $fromdate); // // From start to repeat.
-            //echo '<pre>'; print_r($datelist); exit;
-            foreach ($datelist as $startdate) {
-                //mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid, $eventid);
-                repeat_calendar($congrea, $eventid, $startdate, $sessionid, $timeduration);
+                // TODO:
+        } else if($fromform->sessionstatus == 'changeforthissessionfollowing') {
+            if($fromform->fromsessiondate < time()) {
+                echo 'Past events cannot be changed';
+            } else {
+                //$deletesql = "delete * from {event} where modulename = congrea and id = $edit and timestart >= $fromform->fromsessiondate";
+                $repeatid = $DB->get_field('event', 'repeatid', array('modulename' => 'congrea', 'id' => $edit));
+                if($repeatid) {
+                    $whereclause1 = "modulename = ? AND repeatid = ? AND timestart > ?";
+                    $DB->delete_records_select('event', $whereclause1, array('congrea', $repeatid, $fromform->fromsessiondate));
+                } else {
+                    $whereclause = "modulename = ? AND id = ? AND timestart > ?";
+                    $DB->delete_records_select('event', $whereclause, array('congrea', $edit, $fromform->fromsessiondate));
+                    //$DB->delete_records('event', array('modulename' => 'congrea', 'id' => $edit));
+                }
+                if(empty($fromform->radiogroup['occurances'])) {
+                    $eventobject = calendar_event::create($event);
+                    $eventid = $eventobject->id;
+                    $dataobject = new stdClass();
+                    $dataobject->repeatid = $eventid;
+                    $dataobject->id = $eventid;
+                    $DB->update_record('event', $dataobject);
+                }
+                if (!empty($fromform->days)) {
+                    $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $until, $daysnames);
+                    if(!empty($fromform->radiogroup['occurances'])) {
+                        $event->timestart = strtotime($datelist[0]);
+                        $eventobject = calendar_event::create($event);
+                        $eventid = $eventobject->id; // TODO: -using api return id.
+                        $dataobject = new stdClass();
+                        $dataobject->repeatid = $eventid;
+                        $dataobject->id = $eventid;
+                        $DB->update_record('event', $dataobject); 
+                        array_shift($datelist);
+                    }      
+                    foreach ($datelist as $startdate) {
+                        repeat_calendar($congrea, $description, $eventid, $startdate, $congrea->id, $timeduration, $teacherid);
+                    } 
+                }
             }
         }
+        
     }
-    redirect($returnurl);
+    //if(empty($conflictstatus)) {
+        redirect($returnurl);
+    //}
+    //redirect($returnurl);
 }
 // Output starts here.
 echo $OUTPUT->header();
 echo $OUTPUT->heading($congrea->name);
-if (!empty($sessionsettings)) {
-    $currenttab = 'sessionsettings';
-}
-congrea_print_tabs($currenttab, $context, $cm, $congrea);
-//echo $OUTPUT->heading('Scheduled Sessions');
-if (has_capability('mod/congrea:sessionesetting', $context)) {
-    $options = array();
-    echo $OUTPUT->single_button(
-        $returnurl->out(
-            true,
-            array('action' => 'addsession', 'cmid' => $cm->id)
-        ),
-        get_string('addsessions', 'congrea'),
-        'get',
-        $options
-    );
-}
 echo $OUTPUT->heading('Scheduled Sessions');
-$table = new html_table();
-$table->head = array('Date and time', 'Session duration', 'Teacher', 'Repeat for', 'Repeat days', 'Action');
-$sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id));
-if (!empty($sessionlist)) {
-    foreach ($sessionlist as $list) {
-        $buttons = array();
-        $row = array();
-        $row[] = userdate($list->starttime);
-        $row[] = $list->timeduration . ' ' . 'Minutes';
-        $teachername = $DB->get_record('user', array('id' => $list->teacherid));
-        if (!empty($teachername)) {
-            $username = $teachername->firstname . ' ' . $teachername->lastname; // Todo-for function.
-        } else {
-            $username = get_string('nouser', 'mod_congrea');
-        }
-        $row[] = $username;
-        if (!empty($list->repeattype)) {
-            $row[] = $list->repeattype . ' ' . 'Week';
-        } else {
-            $row[] = 'none';
-        }
-        $row[] = str_replace('"', '', $list->additional);
-        $buttons[] = html_writer::link(
-            new moodle_url(
-                '/mod/congrea/sessionsettings.php',
-                array('id' => $cm->id, 'edit' => $list->id, 'sessionsettings' => $sessionsettings)
-            ),
-            'Edit',
-            array('class' => 'actionlink exportpage')
-
-        );
-        $buttons[] = html_writer::link(
-            new moodle_url(
-                '/mod/congrea/sessionsettings.php',
-                array('id' => $cm->id, 'delete' => $list->id, 'sessionsettings' => $sessionsettings)
-            ),
-            'Delete',
-            array('class' => 'actionlink exportpage')
-
-        );
-        $row[] = implode(' ', $buttons);
-        $table->data[] = $row;
-    }
-    if (!empty($table->data)) {
-        echo html_writer::start_tag('div', array('class' => 'no-overflow'));
-        echo html_writer::table($table);
-        echo html_writer::end_tag('div');
-    } else {
-        echo 'no session';
-    }
-} else {
-    //echo 'No any sessions are available'; // Todo- by get_string.
-    echo $OUTPUT->notification(get_string('nosession', 'mod_congrea'));
-}
 if ($edit) {
-    $list = $DB->get_records('congrea_sessions', array('id' => $edit));
+    $list = $DB->get_records('event', array('id' => $edit));
     $days = array();
     foreach ($list as $formdata) {
         $data = new stdClass;
-        $data->fromsessiondate = $formdata->starttime;
-        $data->timeduration = ($formdata->timeduration * 60);
-        $data->period = $formdata->repeattype;
-        $data->moderatorid = $formdata->teacherid;
-        $data->addmultiply = $formdata->isrepeat;
-        $dayname = (explode(", ", $formdata->additional));
-        foreach ($dayname as $d) {
-            $key = trim($d, '"');
-            $days[$key] = 1;
+        $data->fromsessiondate = $formdata->timestart;
+        $data->timeinminutes = ($formdata->timeduration/60);
+        $data->moderatorid = $formdata->userid;
+        if($formdata->description != 'Single session') {
+            $data->addmultiply = 1;
+        } else {
+            $data->addmultiply = 0;
+        }
+        //if($formdata->description !== 'Single session') {
+            $daysname = explode(':', $formdata->description);
+            $nameofdays = explode(',', $daysname[1]);
+            $till = (int) filter_var($formdata->description , FILTER_SANITIZE_NUMBER_INT);
+            if($till > 1000) {
+                $data->radiogroup['repeattill'] = 1;
+                $data->radiogroup['repeatdatetill'] = $till;
+            } else {
+                $data->radiogroup['repeattill'] = 1;
+                $data->radiogroup['occurances'] = $till;
+            }
+        //}
+        //echo '<pre>'; print_r($nameofdays); exit;
+        foreach ($nameofdays as $d) {
+                $key = trim($d);
+                $days[$key] = 1;
         }
         $data->days = $days;
-        $data->moderatorid = $formdata->teacherid;
     }
     $mform->set_data($data);
 }
@@ -256,5 +306,10 @@ if ($edit || $action == 'addsession') {
     }
 }
 // Finish the page.
+if(!$edit) {
+    $PAGE->requires->js_call_amd('mod_congrea/congrea', 'setSelectedDate');
+}
+//$PAGE->requires->js_call_amd('mod_congrea/congrea', 'setSelectedDate');
+$PAGE->requires->js_call_amd('mod_congrea/congrea', 'disableRepeatTill');
 echo $OUTPUT->footer();
 
