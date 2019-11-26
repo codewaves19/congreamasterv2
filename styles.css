@@ -144,3 +144,8 @@ body#page-mod-congrea-sessionsettings .generaltable th.header.c5,
 #page-mod-congrea-view .wrapper-record-list .admintable.generaltable thead th.header.c5 {
     text-align: left;
 }
+table.generaltable td.c3.lastcol img.iconsmall {
+    width: 16px;
+    margin: 0 4px;
+}
+    

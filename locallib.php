@@ -1156,9 +1156,8 @@ function check_conflicts($congrea, $unixstarttime, $unixendtime, $until = false,
             for ($i = 0; $i < count($allsheduledlist)-1; $i++) {
                 for ($j = $i + 1; $j < count($allsheduledlist); $j++) {
                     //if (($allsheduledlist[$i]->old == 'old' && $allsheduledlist[$j]->current == 'current') || ($allsheduledlist[$i]->current == 'current' && $allsheduledlist[$j]->old == 'old')) {
-                        //continue;
                         if ($allsheduledlist[$i]->sheduledendttime > $allsheduledlist[$j]->sheduledstarttime) {
-                            $conflicts[] = $allsheduledlist[$i]->sheduledstarttime;
+                            $conflicts[] = $allsheduledlist[$i]->sheduledstarttime . ':'.  $allsheduledlist[$j]->sheduledstarttime;
                             //return true;
                         } else {
                             break;

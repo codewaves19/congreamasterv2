@@ -122,13 +122,23 @@ if ($delete) {
         $endtime = ($fromform->fromsessiondate + $timeduration);
         $conflictstatus = check_conflicts($congrea->id, $fromform->fromsessiondate, $endtime, $until, $daysnames, $timeduration, $edit);
         if(!empty($conflictstatus) and empty($fromform->allowconflicts)) {
-            //$conflictmsg = '';
+            $conflictmsg = '';
             foreach($conflictstatus as $conflictsdate) {
                 //echo '<pre>'; print_r($conflictsdate); exit;
-                //$conflictmsg .= userdate($conflictsdate);
-                \core\notification::warning(userdate($conflictsdate));                
+                $conflicts = explode(':', $conflictsdate);
+                //echo '<pre>'; print_r($conflicts); exit;
+                //echo $conflictsdate; exit;
+                $conflictmsg = userdate($conflicts[0]). ' Conflicts between '. userdate($conflicts[1]);
+                // $conflictmsg .= 'Conflicts between';
+                // $conflictmsg .= userdate($conflicts[1]);
+                if(!empty($conflictmsg)) {
+                    \core\notification::warning($conflictmsg);
+                    //\core\notification::warning($conflictsdate);
+                    unset($conflictmsg);
+                }           
                 //\core\notification::warning($conflictsdate);
             }
+            
             //redirect($settingsreturnurl);
             echo $OUTPUT->header();
             echo $OUTPUT->heading(format_string($congrea->name));
