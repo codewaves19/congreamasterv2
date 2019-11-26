@@ -92,7 +92,7 @@ if ($delete) {
             if($fromform->radiogroup['repeattill'] == 1) { // Repeattill.
                 $until = $fromform->radiogroup['repeatdatetill'];
             } else {
-                $until = $fromform->radiogroup['occurances'];
+                $until = $fromform->radiogroup['occurrences'];
             }
             if (!empty($fromform->days)) {
                  $prefix = $daylist = '';
@@ -120,7 +120,7 @@ if ($delete) {
         $timeduration = round($fromform->timeinminutes*60);
         $event->timeduration = $timeduration;
         $endtime = ($fromform->fromsessiondate + $timeduration);
-        $conflictstatus = check_conflicts3($congrea->id, $fromform->fromsessiondate, $endtime, $until, $daysnames, $timeduration, $edit);
+        $conflictstatus = check_conflicts($congrea->id, $fromform->fromsessiondate, $endtime, $until, $daysnames, $timeduration, $edit);
         if(!empty($conflictstatus) and empty($fromform->allowconflicts)) {
             //$conflictmsg = '';
             foreach($conflictstatus as $conflictsdate) {
@@ -140,32 +140,32 @@ if ($delete) {
             return false;
         }
         if(!$edit) {
-        if(empty($fromform->radiogroup['occurances'])) {
-            $eventobject = calendar_event::create($event);
-            $eventid = $eventobject->id; // TODO: -using api return id.
-        }
+            if(empty($fromform->radiogroup['occurrences'])) {
+                $eventobject = calendar_event::create($event);
+                $eventid = $eventobject->id; // TODO: -using api return id.
+            }
         if (!empty($fromform->days)) {
-        if(empty($fromform->radiogroup['occurances'])) {
-            $dataobject = new stdClass();
-            $dataobject->repeatid = $eventid;
-            $dataobject->id = $eventid;
-            $DB->update_record('event', $dataobject);
-        }
-        $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $until, $daysnames);
-        if(!empty($fromform->radiogroup['occurances'])) {
-            $event->timestart = strtotime($datelist[0]);
-            //echo $event->timestart; exit;
-            $eventobject = calendar_event::create($event);
-            $eventid = $eventobject->id; // TODO: -using api return id.
-            $dataobject = new stdClass();
-            $dataobject->repeatid = $eventid;
-            $dataobject->id = $eventid;
-            $DB->update_record('event', $dataobject); 
-            array_shift($datelist);
-        }
-        foreach ($datelist as $startdate) {
-            repeat_calendar($congrea, $description, $eventid, $startdate, $congrea->id, $timeduration, $teacherid);
-        } 
+            if(empty($fromform->radiogroup['occurrences'])) {
+                $dataobject = new stdClass();
+                $dataobject->repeatid = $eventid;
+                $dataobject->id = $eventid;
+                $DB->update_record('event', $dataobject);
+            }
+            $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $until, $daysnames);
+            if(!empty($fromform->radiogroup['occurrences'])) {
+                $event->timestart = strtotime($datelist[0]);
+                //echo $event->timestart; exit;
+                $eventobject = calendar_event::create($event);
+                $eventid = $eventobject->id; // TODO: -using api return id.
+                $dataobject = new stdClass();
+                $dataobject->repeatid = $eventid;
+                $dataobject->id = $eventid;
+                $DB->update_record('event', $dataobject); 
+                array_shift($datelist);
+            }
+            foreach ($datelist as $startdate) {
+                repeat_calendar($congrea, $description, $eventid, $startdate, $congrea->id, $timeduration, $teacherid);
+            } 
     }
     } else { // Handle edit cases.
         if($fromform->sessionstatus == 'changesessiononly') {
@@ -188,7 +188,7 @@ if ($delete) {
                     $whereclause = "modulename = ? AND id = ? AND timestart > ?";
                     $DB->delete_records_select('event', $whereclause, array('congrea', $edit, time()));
                 }
-                if(empty($fromform->radiogroup['occurances'])) {
+                if(empty($fromform->radiogroup['occurrences'])) {
                     $eventobject = calendar_event::create($event);
                     $eventid = $eventobject->id;
                     $dataobject = new stdClass();
@@ -198,7 +198,7 @@ if ($delete) {
                 }
                 if (!empty($fromform->days)) {
                     $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $until, $daysnames);
-                    if(!empty($fromform->radiogroup['occurances'])) {
+                    if(!empty($fromform->radiogroup['occurrences'])) {
                         $event->timestart = strtotime($datelist[0]);
                         $eventobject = calendar_event::create($event);
                         $eventid = $eventobject->id; // TODO: -using api return id.
@@ -213,7 +213,7 @@ if ($delete) {
                     } 
                 }
             }
-                // TODO:
+              // TODO:
         } else if($fromform->sessionstatus == 'changeforthissessionfollowing') {
             if($fromform->fromsessiondate < time()) {
                 echo 'Past events cannot be changed';
@@ -228,7 +228,7 @@ if ($delete) {
                     $DB->delete_records_select('event', $whereclause, array('congrea', $edit, $fromform->fromsessiondate));
                     //$DB->delete_records('event', array('modulename' => 'congrea', 'id' => $edit));
                 }
-                if(empty($fromform->radiogroup['occurances'])) {
+                if(empty($fromform->radiogroup['occurrences'])) {
                     $eventobject = calendar_event::create($event);
                     $eventid = $eventobject->id;
                     $dataobject = new stdClass();
@@ -238,7 +238,7 @@ if ($delete) {
                 }
                 if (!empty($fromform->days)) {
                     $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $until, $daysnames);
-                    if(!empty($fromform->radiogroup['occurances'])) {
+                    if(!empty($fromform->radiogroup['occurrences'])) {
                         $event->timestart = strtotime($datelist[0]);
                         $eventobject = calendar_event::create($event);
                         $eventid = $eventobject->id; // TODO: -using api return id.
@@ -287,7 +287,7 @@ if ($edit) {
                 $data->radiogroup['repeatdatetill'] = $till;
             } else {
                 $data->radiogroup['repeattill'] = 1;
-                $data->radiogroup['occurances'] = $till;
+                $data->radiogroup['occurrences'] = $till;
             }
         //}
         //echo '<pre>'; print_r($nameofdays); exit;

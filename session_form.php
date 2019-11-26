@@ -71,12 +71,12 @@ class mod_congrea_session_form extends moodleform {
         $group = array();
         $group[] =& $mform->createElement('radio', 'repeattill', '', get_string('repeattill', 'congrea'), 1);
         $group[] =& $mform->createElement('date_selector', 'repeatdatetill', '');
-        $group[] =& $mform->createElement('radio', 'repeattill', '', get_string('occurances', 'congrea'), 2);
-        $group[] =& $mform->createElement('text', 'occurances', get_string('occurances', 'congrea'));
+        $group[] =& $mform->createElement('radio', 'repeattill', '', get_string('occurrences', 'congrea'), 2);
+        $group[] =& $mform->createElement('text', 'occurrences', get_string('occurrences', 'congrea'));
         $mform->addGroup($group, 'radiogroup', '', '<br />', true);// TODO : repeatgroup
         $mform->setDefault('radiogroup[repeattill]', 1);
-        $mform->setType('radiogroup[occurances]', PARAM_RAW);
-        $mform->setType('occurances', PARAM_INT);
+        $mform->setType('radiogroup[occurrences]', PARAM_RAW);
+        $mform->setType('occurrences', PARAM_INT);
         $mform->disabledIf('radiogroup', 'addmultiply', 'notchecked');
         //$mform->disabledIf('sessionstatus', 'addmultiply', 'notchecked');
         $days = array();
@@ -110,11 +110,8 @@ class mod_congrea_session_form extends moodleform {
      */
     public function validation($data, $files) {
         global $DB;
-        //echo $data['radiogroup']['occurances']; exit;
-        //$data['radiogroup']['repeatdatetill'];        
-        //echo '<pre>'; print_r($data); exit;
         $errors = parent::validation($data, $files);
-        if ((!empty($data['radiogroup']['repeatdatetill']) || !empty($data['radiogroup']['occurances'])) && empty($data['days']) && !empty($data['addmultiply'])) {
+        if ((!empty($data['radiogroup']['repeatdatetill']) || !empty($data['radiogroup']['occurrences'])) && empty($data['days']) && !empty($data['addmultiply'])) {
             $errors['days'] = get_string('selectdays', 'congrea');
         }
         if (!empty($data['edit']) and empty($data['sessionstatus'])) {
@@ -160,22 +157,15 @@ class mod_congrea_session_form extends moodleform {
             $expecteddate = $data['radiogroup']['repeatdatetill'];
 
         } else {
-            $expecteddate = $data['radiogroup']['occurances']; // TODO;
-            // $sessionstartdate =  $data['fromsessiondate'];
-            // $expecteddate = date(
-            //                 'Y-m-d H:i:s',
-            //                 strtotime(date('Y-m-d H:i:s', $sessionstartdate) . "+$occrences weeks")
-            //             );
+            $expecteddate = $data['radiogroup']['occurrences']; // TODO;
         }
         //     $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $data['edit']));
         //     $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $data['edit']));
         // }
         //$test = array(1, 2, 3);
-        //$conflictstatus = check_conflicts3($data['congreaid'], $data['fromsessiondate'], $endtime, $expecteddate, $additional, $durationinminutes, $data['edit']);
+        //$conflictstatus = check_conflicts($data['congreaid'], $data['fromsessiondate'], $endtime, $expecteddate, $additional, $durationinminutes, $data['edit']);
         // if($conflictstatus) {
         //     $errors['fromsessiondate'] = get_string('conflictsdate', 'congrea');
-        //     //$errors['fromsessiondate'] = $test;
-        //     //echo 'ravi';
         // }
         return $errors;
     }

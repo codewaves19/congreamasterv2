@@ -254,6 +254,6 @@ $string['repeattill'] = 'Repeat till';
 $string['changesessiononly'] = 'Change for this session only';
 $string['changeallsession'] = 'Change for all session';
 $string['changeforthissession'] = 'Change for this session and those following it';
-$string['occurances'] = 'Occurrences';
+$string['occurrences'] = 'Occurrences';
 $string['allowconflicts'] = 'Allow conflicts';
 $string['editcase'] = 'Select edit case';
