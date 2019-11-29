@@ -137,8 +137,7 @@ if ($delete) {
                     unset($conflictmsg);
                 }           
                 //\core\notification::warning($conflictsdate);
-            }
-            
+            }            
             //redirect($settingsreturnurl);
             echo $OUTPUT->header();
             echo $OUTPUT->heading(format_string($congrea->name));
@@ -163,7 +162,10 @@ if ($delete) {
             }
             $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $until, $daysnames);
             if(!empty($fromform->radiogroup['occurrences'])) {
-                $event->timestart = strtotime($datelist[0]);
+                if($fromform->fromsessiondate >  time()) {
+                    $event->timestart = strtotime($datelist[0]);
+                }
+                //$event->timestart = strtotime($datelist[0]);
                 //echo $event->timestart; exit;
                 $eventobject = calendar_event::create($event);
                 $eventid = $eventobject->id; // TODO: -using api return id.
@@ -171,7 +173,9 @@ if ($delete) {
                 $dataobject->repeatid = $eventid;
                 $dataobject->id = $eventid;
                 $DB->update_record('event', $dataobject); 
-                array_shift($datelist);
+                if($fromform->fromsessiondate >  time()) {
+                    array_shift($datelist);
+                }
             }
             foreach ($datelist as $startdate) {
                 repeat_calendar($congrea, $description, $eventid, $startdate, $congrea->id, $timeduration, $teacherid);
