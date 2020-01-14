@@ -102,12 +102,12 @@ if ($mform->is_cancelled()) {
             }
             $data->additional = str_replace('"', '', $daylist);
         } else {
-            $data->additional = 'none';
+            $data->additional = '-';
         }
     } else {
         $data->isrepeat = 0;
         $data->repeattype = 0;
-        $data->additional = 'none';
+        $data->additional = '-';
     }
     $data->teacherid = $fromform->moderatorid;
     $data->congreaid = $congrea->id;
@@ -194,7 +194,7 @@ if (!empty($sessionlist)) {
         if (!empty($list->repeattype)) {
             $row[] = $list->repeattype . ' ' . 'Week';
         } else {
-            $row[] = 'none';
+            $row[] = '-';
         }
         $row[] = str_replace('"', '', $list->additional);
         $buttons[] = html_writer::link(
@@ -257,4 +257,3 @@ if ($edit || $action == 'addsession') {
 }
 // Finish the page.
 echo $OUTPUT->footer();
-
