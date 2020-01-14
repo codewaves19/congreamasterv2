@@ -391,7 +391,7 @@ if ($sessionendtime > time() && $sessionstarttime <= time()) {
 // Upload congrea recording.
 $postdata = json_encode(array('room' => $room));
 if ($psession) {
-    // Past session.
+    // Recorded session.
     echo html_writer::end_tag('div');
     echo html_writer::start_tag('div', array('class' => 'wrapper-record-list'));
     $result = curl_request("https://api.congrea.net/backend/recordings", $postdata, $key, $secret);
@@ -408,7 +408,7 @@ if ($psession) {
         echo $OUTPUT->heading('There are no recordings to show');
     }
     $table = new html_table();
-    $table->head = array('File name', 'Time created', 'Action');
+    $table->head = array('File name', 'Time created', 'Action'); // Recorded session header
     $table->colclasses = array('centeralign', 'centeralign');
     $table->attributes['class'] = 'admintable generaltable';
     $table->id = "recorded_data";
@@ -581,7 +581,7 @@ if (!empty($table) and $session and $sessionstatus) {
     $presentnroluser = count($attendence);
     $upsentuser = $countenroluser - $presentnroluser;
     $present = '<b> Session duration: </b>' . $sessionstatus->totalsessiontime . ' ' .
-    'Mins' . '</br>' . '<b> Students absent: </b>' . $upsentuser . '</br>' . '<b> Students present: </b>' . $presentnroluser;
+    'Mins' . '</br>' . '<b> Students absent: </b>' . $upsentuser . '</br>' . '<b> Students present: </b>' . $presentnroluser. '</br></br>';
     echo html_writer::tag('div', $present, array('class' => 'present'));
     echo html_writer::table($table);
     echo html_writer::end_tag('div');
