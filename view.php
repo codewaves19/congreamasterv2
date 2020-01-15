@@ -536,7 +536,7 @@ if ($session) {
                 $rectotalviewedpercent = 0;
                 $recviewed = '-';
             }
-            if ((has_capability('mod/congrea:addinstance', $context)) AND ($studentname->id === $teacherid)){
+            if (has_capability('mod/congrea:addinstance', $context) && ($studentname->id == $teacherid)){
                 $table->data[] = array(
                     '<strong>' . $username . '</strong', date('y-m-d h:i:s', $studentsstatus->starttime),
                     date('y-m-d h:i:s', $studentsstatus->endtime),
@@ -549,10 +549,7 @@ if ($session) {
                     $studentsstatus->totalspenttime . ' ' . 'Mins', $recviewed, '<p style="color:green;"><b>P</b></p>'
                 );
             }
-            /* print_r($role);
-            print_r($username); */
         }
-        //exit;
         if (!empty($attendence)) {
             if (!empty($enrolusers)) {
                 $result = array_diff($enrolusers, $attendence);
@@ -580,22 +577,18 @@ if ($session) {
                     $rectotalviewedpercent = 0;
                     $recviewed = '-';
                 }
-                if ((has_capability('mod/congrea:addinstance', $context)) AND ($studentname->id == $teacher)) {
+                if (has_capability('mod/congrea:addinstance', $context) && ($studentname->id == $teacherid)) {
                     $table->data[] = array('<strong>' . $username . '</strong>', '-', '-', '-', $recviewed, '<p style="color:red;"><b>A</b></p>');
                 } else {
                     $table->data[] = array($username, '-', '-', '-', $recviewed, '<p style="color:red;"><b>A</b></p>');
                 }
-                
             }
-            //exit;
         } else {
             echo get_string('absentuser', 'mod_congrea');
         }
     } else {
         echo get_string('absentsessionuser', 'mod_congrea');
     }
-    print_r($role);
-    print_r($username);
 }
 
 if (!empty($table->data) and ! $session) {
