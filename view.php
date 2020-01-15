@@ -213,6 +213,7 @@ if (has_capability('mod/congrea:addinstance', $context) && ($USER->id == $teache
 } else if (has_capability('mod/congrea:attendance', $context) and $session) {
     $role = 't';
 }
+
 if (!empty($cgapi = get_config('mod_congrea', 'cgapi')) && !empty($cgsecret = get_config('mod_congrea', 'cgsecretpassword'))) {
     $cgcolor = get_config('mod_congrea', 'colorpicker');
     if (strlen($cgsecret) >= 64 && strlen($cgapi) > 32) {
@@ -399,7 +400,7 @@ if ($psession) {
         $data = json_decode($result);
         $recording = json_decode($data->data);
     }
-    if (!empty($recording->Items) and ! $session) {
+    if (!empty($recording->Items) and !$session) {
         rsort($recording->Items);
         echo $OUTPUT->heading('Recorded sessions');
     } else if ($session) {
@@ -408,7 +409,7 @@ if ($psession) {
         echo $OUTPUT->heading('There are no recordings to show');
     }
     $table = new html_table();
-    $table->head = array('File name', 'Time created', 'Action'); // Recorded session header
+    $table->head = array('File name', 'Time created', 'Report', 'Action',''); // Recorded session header
     $table->colclasses = array('centeralign', 'centeralign');
     $table->attributes['class'] = 'admintable generaltable';
     $table->id = "recorded_data";
@@ -420,22 +421,39 @@ if ($psession) {
         $row[] = $record->name . ' ' . mod_congrea_module_get_rename_action($cm, $record);
         $row[] = userdate($record->time / 1000); // Todo.
         $vcsid = $record->key_room; // Todo.
-        if (has_capability('mod/congrea:playrecording', $context)) {
-            $buttons[] = congrea_online_server_play(
-                    $url, $authusername, $authpassword, $role, $rid,
-                    $room, $upload, $down, $info, $cgcolor, $webapi, $userpicturesrc,
-                    $licensekey, $id, $vcsid, $record->session, $recordingstatus, $hexcode
-            );
-        }
         // Attendance button.
         if (has_capability('mod/congrea:attendance', $context)) {
             $imageurl = "$CFG->wwwroot/mod/congrea/pix/attendance.png";
-            $buttons[] = html_writer::link(
+            $attendancereport = html_writer::link(
                             new moodle_url($returnurl, array('session' => $record->session, 'psession' => true)),
                     html_writer::empty_tag('img', array(
                                 'src' => $imageurl,
                                 'alt' => 'Attendance Report', 'class' => 'attend'
                             )), array('title' => 'View Attendance Report')
+            );
+            $row[] = $attendancereport;
+        }
+       
+        if (has_capability('mod/congrea:playrecording', $context)) {
+            $buttons[] = congrea_online_server_play(
+                $url,
+                $authusername,
+                $authpassword,
+                $role,
+                $rid,
+                $room,
+                $upload,
+                $down,
+                $info,
+                $cgcolor,
+                $webapi,
+                $userpicturesrc,
+                $licensekey,
+                $id,
+                $vcsid,
+                $record->session,
+                $recordingstatus,
+                $hexcode
             );
         }
         // Delete button.
@@ -511,27 +529,30 @@ if ($session) {
                     $rectotalviewedpercent = round(($recview->totalviewd*100)/$totalseconds); 
                     $recviewed = $recview->totalviewd.' '.'Secs';
                 } else {
-                    //echo $recview->totalviewd; exit;
-                    //$init = $recview->totalviewd;
-                    // $hours = floor($init / 3600);
-                    //$minutes = floor(($init / 60) % 60);
-                    // $seconds = $init % 60;
-                    //echo "$hours:$minutes:$seconds"; exit;
-                    //$recviewed = $hours.'h: '.$minutes.'m: '.$seconds.'s';
                     $recviewed = round($recview->totalviewd/60).' Mins';
                     $rectotalviewedpercent = $recview->totalviewedpercent;
-                } 
-                //echo '<pre>'; print_r($recview); exit;
+                }
             } else {
                 $rectotalviewedpercent = 0;
                 $recviewed = '-';
             }
-            $table->data[] = array(
-                $username, date('y-m-d h:i:s', $studentsstatus->starttime),
-                date('y-m-d h:i:s', $studentsstatus->endtime),
-                $studentsstatus->totalspenttime.' '.'Mins', $recviewed, '<p style="color:green;"><b>P</b></p>'
-            );
+            if ((has_capability('mod/congrea:addinstance', $context)) AND ($studentname->id === $teacherid)){
+                $table->data[] = array(
+                    '<strong>' . $username . '</strong', date('y-m-d h:i:s', $studentsstatus->starttime),
+                    date('y-m-d h:i:s', $studentsstatus->endtime),
+                    $studentsstatus->totalspenttime . ' ' . 'Mins', $recviewed, '<p style="color:green;"><b>P</b></p>'
+                );   
+            } else {
+                $table->data[] = array(
+                    $username, date('y-m-d h:i:s', $studentsstatus->starttime),
+                    date('y-m-d h:i:s', $studentsstatus->endtime),
+                    $studentsstatus->totalspenttime . ' ' . 'Mins', $recviewed, '<p style="color:green;"><b>P</b></p>'
+                );
+            }
+            /* print_r($role);
+            print_r($username); */
         }
+        //exit;
         if (!empty($attendence)) {
             if (!empty($enrolusers)) {
                 $result = array_diff($enrolusers, $attendence);
@@ -559,14 +580,22 @@ if ($session) {
                     $rectotalviewedpercent = 0;
                     $recviewed = '-';
                 }
-                $table->data[] = array($username, '-', '-', '-', $recviewed, '<p style="color:red;"><b>A</b></p>');
+                if ((has_capability('mod/congrea:addinstance', $context)) AND ($studentname->id == $teacher)) {
+                    $table->data[] = array('<strong>' . $username . '</strong>', '-', '-', '-', $recviewed, '<p style="color:red;"><b>A</b></p>');
+                } else {
+                    $table->data[] = array($username, '-', '-', '-', $recviewed, '<p style="color:red;"><b>A</b></p>');
+                }
+                
             }
+            //exit;
         } else {
             echo get_string('absentuser', 'mod_congrea');
         }
     } else {
         echo get_string('absentsessionuser', 'mod_congrea');
     }
+    print_r($role);
+    print_r($username);
 }
 
 if (!empty($table->data) and ! $session) {
