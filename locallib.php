@@ -1178,9 +1178,8 @@ function check_conflicts($congrea, $startdate, $enddate, $repeat = false, $daysn
                 $starttime = date("Y-m-d H:i:s", $stime);
                 $dataendtime = strtotime(date('Y-m-d H:i:s', strtotime("+$dbduration minutes", strtotime($starttime)))); // DB Enddate.
                 if (
-                    $data->timestart <= $startdate && $dataendtime >= $startdate ||
-                    $data->timestart <= $enddate && $dataendtime >= $enddate ||
-                    $data->timestart >= $startdate && $dataendtime <= $enddate
+                    (($startdate > $data->timestart)&&($startdate < $dataendtime)) ||
+                    (($enddate > $data->timestart) && ($enddate < $dataendtime)) 
                 ) {
                     return true; // conflicts
                 }

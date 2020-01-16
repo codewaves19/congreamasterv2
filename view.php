@@ -68,9 +68,7 @@ $sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congre
         $sessionstarttime = 0;
         $sessionendtime = 0;        
     }
-    //echo '<pre>'; print_r($currentdata); exit;
     if (!empty($currentdata)) {
-        //$sessionstarttime = congrea_array_key_first($currentdata);
         $eventid = congrea_array_key_first($currentdata);
         $sessionstarttime = $currentdata[$eventid]->timestart;
         $duration =  $currentdata[$eventid]->timeduration;

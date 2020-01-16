@@ -78,7 +78,7 @@ if ($delete) {
         $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $delete));
     }
 }
-//$editconflict = false;
+
 $mform = new mod_congrea_session_form(null, array('id' => $id, 'sessionsettings' => $sessionsettings, 'edit' => $edit, 'action' => $action, 'congreaid' => $congrea->id));
 if ($mform->is_cancelled()) {
     // Do nothing.
@@ -116,10 +116,11 @@ if ($mform->is_cancelled()) {
         if(empty($fromform->period)) { // No repeat.
             mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration, $sessionid);
         }
+        /* if ($action == 'addsession') {
+            echo $OUTPUT->notification(get_string('newsessionadded', 'mod_congrea'));
+        } */
     }
     if ($edit) { // Handle edit condition of schedule.
-        //$sessionid = $edit;
-        //$data->id = $edit;
         $conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration, $edit);
         if(!$conflictstatus) {
             $sessionid = $DB->insert_record('congrea_sessions', $data);
@@ -145,9 +146,7 @@ if ($mform->is_cancelled()) {
             $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $expecteddate, $data->additional);
             $fromdate = date('Y-m-d H:i:s', $fromform->fromsessiondate);
             array_unshift($datelist, $fromdate); // // From start to repeat.
-            //echo '<pre>'; print_r($datelist); exit;
             foreach ($datelist as $startdate) {
-                //mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid, $eventid);
                 repeat_calendar($congrea, $eventid, $startdate, $sessionid, $timeduration);
             }
         }
@@ -173,11 +172,11 @@ if (has_capability('mod/congrea:sessionesetting', $context)) {
         $options
     );
 }
-echo $OUTPUT->heading('Scheduled Sessions');
+echo $OUTPUT->heading('Schedules');
 $table = new html_table();
-$table->head = array('Date and time', 'Session duration', 'Teacher', 'Repeat for', 'Repeat days', 'Action');
+$table->head = array('Date and time of first session', 'Session duration', 'Teacher', 'Repeat for', 'Repeat days', 'Action');
 $sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id));
-rsort($sessionlist);
+sort($sessionlist);
 if (!empty($sessionlist)) {
     foreach ($sessionlist as $list) {
         $buttons = array();
@@ -213,7 +212,6 @@ if (!empty($sessionlist)) {
             ),
             'Delete',
             array('class' => 'actionlink exportpage')
-
         );
         $row[] = implode(' ', $buttons);
         $table->data[] = $row;
@@ -221,12 +219,12 @@ if (!empty($sessionlist)) {
     if (!empty($table->data)) {
         echo html_writer::start_tag('div', array('class' => 'no-overflow'));
         echo html_writer::table($table);
+        echo html_writer::start_tag('br');
         echo html_writer::end_tag('div');
     } else {
         echo 'no session';
     }
 } else {
-    //echo 'No any sessions are available'; // Todo- by get_string.
     echo $OUTPUT->notification(get_string('nosession', 'mod_congrea'));
 }
 if ($edit) {
@@ -252,8 +250,18 @@ if ($edit) {
 
 if ($edit || $action == 'addsession') {
     if (has_capability('mod/congrea:sessionesetting', $context)) {
+        if (!$edit){
+            echo html_writer::start_tag('br');
+            echo $OUTPUT->heading('Add a new schedule');
+        } else{
+            echo html_writer::start_tag('br');
+            echo $OUTPUT->heading('Edit an existing schedule');
+        }
         $mform->display();
     }
+}
+if ($action == 'addsession') {
+    echo $OUTPUT->notification(get_string('newsessionadded', 'mod_congrea'));
 }
 // Finish the page.
 echo $OUTPUT->footer();

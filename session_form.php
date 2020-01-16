@@ -106,7 +106,6 @@ class mod_congrea_session_form extends moodleform {
      */
     public function validation($data, $files) {
         global $DB;
-        //echo '<pre>'; print_r($data); exit;
         $errors = parent::validation($data, $files);
         if (!empty($data['period']) && $data['period'] > 0 && empty($data['days'])) {
             $errors['days'] = get_string('selectdays', 'congrea');
@@ -123,7 +122,7 @@ class mod_congrea_session_form extends moodleform {
         if ($durationinminutes < 10) {
             $errors['timeduration'] = get_string('errordurationlimit', 'congrea');
         }
-        if ($durationinminutes > 1440) { // Minutes of 24 hours.
+        if ($durationinminutes > 1439) { // Minutes of 24 hours.
             $errors['timeduration'] = get_string('errortimeduration', 'congrea');
         }
         if(empty($data['moderatorid'])) {
@@ -146,16 +145,11 @@ class mod_congrea_session_form extends moodleform {
         } else {
             $repeat = 0;
         }
-        //echo $additional; exit;
-        // if(!empty($data['edit'])) {
-        //     $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $data['edit']));
-        //     $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $data['edit']));
-        // }
         $conflictstatus = check_conflicts($data['congreaid'], $data['fromsessiondate'], $endtime,  $repeat, $additional, $durationinminutes, $data['edit']);
         if($conflictstatus) {
             $errors['fromsessiondate'] = get_string('conflictsdate', 'congrea');
         }
-        return $errors;
+        return $errors; // check
     }
 
 }

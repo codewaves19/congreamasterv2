@@ -250,3 +250,4 @@ $string['todaynosession'] = 'Today no session please view below upcoming session
 $string['enrolteacher'] = 'Enrol a teacher in this course';
 $string['nosession'] = 'No sessions are available to display.';
 $string['nosession'] = 'There are no any sessions';
+$string['newsessionadded'] = 'New schedule is created in the table.';
