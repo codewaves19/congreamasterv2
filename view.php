@@ -51,9 +51,6 @@ if ($id) {
     print_error('You must specify a course_module ID or an instance ID');
 }
 $sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id)); // from mdl_congrea_sessions
-if(empty($sessionlist)) {
-    redirect(new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true)));
-}
     $time = time();
     $currentsql = "SELECT id, timestart, timeduration, userid from {event}"
             . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time and (timestart + (timeduration)) > $time";
