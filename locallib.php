@@ -27,9 +27,9 @@
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/calendar/lib.php');
 
-define('NEXT_7_DAYS', 1);
-define('NEXT_30_DAYS', 2);
-define('NEXT_3_MONTH', 3);
+define('SEVEN_DAYS', 1);
+define('THIRTY_DAYS', 2);
+define('THREE_MONTH', 3);
 
 /**
  * Get list of teacher of current course
@@ -860,9 +860,9 @@ function week_between_two_dates($date1, $date2)
 function congrea_get_dropdown()
 {
     return array(
-        NEXT_7_DAYS => get_string('next7days', 'congrea'),
-        NEXT_30_DAYS => get_string('next30days', 'congrea'),
-        NEXT_3_MONTH => get_string('next3month', 'congrea')
+        SEVEN_DAYS => get_string('7days', 'congrea'),
+        THIRTY_DAYS => get_string('30days', 'congrea'),
+        THREE_MONTH => get_string('3month', 'congrea')
     );
 }
 
@@ -1259,4 +1259,13 @@ function repeat_date_list_check($startdate, $expecteddate, $days, $duration)
         }
         return $nextdate;
     }
+}
+/* Function to sort the scheduled list of sessions
+*/
+function compare_dates_scheduled_list($sessionlist, $session)
+{        
+         if ($sessionlist->starttime == $session->starttime) {
+            return 0;
+        }
+        return ($sessionlist->starttime < $session->starttime) ? -1 : 1;
 }

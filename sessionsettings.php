@@ -22,6 +22,7 @@
  *
  * @package    mod_congrea
  * @copyright  2019 Manisha Dayal
+
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
@@ -36,7 +37,6 @@ $edit = optional_param('edit', 0, PARAM_INT);
 $action = optional_param('action', ' ', PARAM_CLEANHTML);
 $delete = optional_param('delete', 0, PARAM_INT);
 $confirm = optional_param('confirm', 0, PARAM_INT);
-//echo $action; exit;
 if ($id) {
     $cm = get_coursemodule_from_id('congrea', $id, 0, false, MUST_EXIST);
     $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
@@ -51,6 +51,7 @@ if ($id) {
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 $returnurl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true));
+$settingsreturnurl = new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'action' => 'addsession')); // added MD:
 // Print the page header.
 $PAGE->set_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => $sessionsettings));
 $PAGE->set_title(format_string($congrea->name));
@@ -74,8 +75,9 @@ if ($delete) {
         echo $OUTPUT->footer();
         die;
     } else if (data_submitted()) {
-        $DB->delete_records('congrea_sessions', array('id' => $delete));
+        //$DB->delete_records('congrea_sessions', array('id' => $delete)); // MD:
         $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $delete));
+        //$DB->delete_records('event', array('id' => $delete, 'repeatid' => $delete, 'modulename' => 'congrea'));
     }
 }
 
@@ -92,58 +94,63 @@ if ($mform->is_cancelled()) {
     $timeduration = round((abs($data->endtime - $data->starttime) / 60));
     $data->timeduration = $timeduration;
     if (!empty($fromform->addmultiply)) {
-        $data->isrepeat = $fromform->addmultiply;
-        $data->repeattype = $fromform->period;
+        $data->isrepeat = $fromform->addmultiply; // MD: $data->multiple = $fromform->addmultiply;
+        $data->repeattype = $fromform->period; // MD: $data->repeatid = $fromform->period;
         if (!empty($fromform->days)) {
             $prefix = $daylist = '';
             foreach ($fromform->days as $keys => $daysname) {
                 $daylist .= $prefix . '"' . $keys . '"';
                 $prefix = ', ';
             }
-            $data->additional = str_replace('"', '', $daylist);
+/*             if (!empty($fromform->days)) {
+                $daysnames = implode(", ", array_keys($fromform->days));
+                $event->description = $until . ' weekly: ' . $daysnames;
+            } */
+            $data->additional = str_replace('"', '', $daylist); // MD:
         } else {
-            $data->additional = '-';
+            $data->additional = '-'; // MD:
         }
-    } else {
+    } else { // Single Event.
+        /* $until = false;
+        $event->description = 'Single session';
+        $daysnames = false; */
         $data->isrepeat = 0;
         $data->repeattype = 0;
         $data->additional = '-';
     }
-    $data->teacherid = $fromform->moderatorid;
+    $data->teacherid = $fromform->moderatorid; // MD:
     $data->congreaid = $congrea->id;
     if ($action == 'addsession') {
         $sessionid = $DB->insert_record('congrea_sessions', $data); // Insert record in congrea table.
-        if(empty($fromform->period)) { // No repeat.
+        if(empty($fromform->period)) { // No repeat. MD:
             mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration, $sessionid);
         }
-        /* if ($action == 'addsession') {
-            echo $OUTPUT->notification(get_string('newsessionadded', 'mod_congrea'));
-        } */
+        //echo $OUTPUT->notification(get_string('newsessionadded', 'mod_congrea'));
     }
     if ($edit) { // Handle edit condition of schedule.
-        $conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration, $edit);
-        if(!$conflictstatus) {
-            $sessionid = $DB->insert_record('congrea_sessions', $data);
+        //$conflictstatus = check_conflicts($congrea->id, $data->starttime, $data->endtime,  $data->repeattype, $data->additional, $timeduration, $edit); // MD:
+       // if(!$conflictstatus) {
+            $sessionid = $DB->insert_record('congrea_sessions', $data); // MD:
             if($sessionid) {
                 if(empty($fromform->period)) { // No repeat.
                     mod_congrea_update_calendar($congrea, $fromform->fromsessiondate, $expecteddate, $timeduration,  $sessionid);
                 }
-                $DB->delete_records('congrea_sessions', array('id' => $edit));
+                $DB->delete_records('congrea_sessions', array('id' => $edit)); // MD:
                 $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $edit));
             }
-        } else {
-            echo 'conflicts in dates';
-        }
+        //} else {
+            //echo 'conflicts in dates';
+        //}
     }
     if (!empty($fromform->addmultiply)) {
-        if ($fromform->period > 0) { // Here need to calculate repeate dates.
+        if ($fromform->period > 0) { // Here need to calculate repeate dates. MD:
             $params = array('modulename' => 'congrea', 'instance' => $congrea->id, 'eventtype' => $sessionid);
             $eventid = $DB->get_field('event', 'id', $params);
             $expecteddate = date(
                 'Y-m-d H:i:s',
                 strtotime(date('Y-m-d H:i:s', $fromform->fromsessiondate) . "+$fromform->period weeks")
             );
-            $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $expecteddate, $data->additional);
+            $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $expecteddate, $data->additional); // MD:
             $fromdate = date('Y-m-d H:i:s', $fromform->fromsessiondate);
             array_unshift($datelist, $fromdate); // // From start to repeat.
             foreach ($datelist as $startdate) {
@@ -175,13 +182,15 @@ if (has_capability('mod/congrea:sessionesetting', $context)) {
 echo $OUTPUT->heading('Schedules');
 $table = new html_table();
 $table->head = array('Date and time of first session', 'Session duration', 'Teacher', 'Repeat for', 'Repeat days', 'Action');
-$sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id));
-sort($sessionlist);
+$sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id)); // MD:
+usort($sessionlist, "compare_dates_scheduled_list");
+$currenttime = time();
 if (!empty($sessionlist)) {
     foreach ($sessionlist as $list) {
         $buttons = array();
         $row = array();
         $row[] = userdate($list->starttime);
+        
         $row[] = $list->timeduration . ' ' . 'Minutes';
         $teachername = $DB->get_record('user', array('id' => $list->teacherid));
         if (!empty($teachername)) {
@@ -214,7 +223,12 @@ if (!empty($sessionlist)) {
             array('class' => 'actionlink exportpage')
         );
         $row[] = implode(' ', $buttons);
-        $table->data[] = $row;
+        if ($list->endtime < $currenttime) { //past sessions
+            $table->data[] = $row->attributes['bgcolor'] = 'red'; // Choose a name for the CSS class.
+            //$row[] = $list->timeduration . ' ' . 'Minutes'. ' (Past session)';
+        } else{
+            $table->data[] = $row;
+        }
     }
     if (!empty($table->data)) {
         echo html_writer::start_tag('div', array('class' => 'no-overflow'));
@@ -226,17 +240,21 @@ if (!empty($sessionlist)) {
     }
 } else {
     echo $OUTPUT->notification(get_string('nosession', 'mod_congrea'));
+    if($action == "addsession"){
+        echo $OUTPUT->notification(get_string('newsessionadded', 'mod_congrea'));
+    }
 }
 if ($edit) {
-    $list = $DB->get_records('congrea_sessions', array('id' => $edit)); // ongrea sessions table
+    $list = $DB->get_records('congrea_sessions', array('id' => $edit)); // congrea sessions table MD:
+    usort($list->starttime, "compare_dates_scheduled_list");
     $days = array();
     foreach ($list as $formdata) {
         $data = new stdClass;
         $data->fromsessiondate = $formdata->starttime;
         $data->timeduration = ($formdata->timeduration * 60);
-        $data->period = $formdata->repeattype;
+        $data->period = $formdata->repeattype; // MD:
         $data->moderatorid = $formdata->teacherid;
-        $data->addmultiply = $formdata->isrepeat;
+        $data->addmultiply = $formdata->isrepeat; // MD: 
         $dayname = (explode(", ", $formdata->additional));
         foreach ($dayname as $d) {
             $key = trim($d, '"');
@@ -260,8 +278,6 @@ if ($edit || $action == 'addsession') {
         $mform->display();
     }
 }
-if ($action == 'addsession') {
-    echo $OUTPUT->notification(get_string('newsessionadded', 'mod_congrea'));
-}
+
 // Finish the page.
 echo $OUTPUT->footer();

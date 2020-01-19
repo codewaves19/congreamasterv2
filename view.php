@@ -51,43 +51,41 @@ if ($id) {
     print_error('You must specify a course_module ID or an instance ID');
 }
 $sessionlist = $DB->get_records('congrea_sessions', array('congreaid' => $congrea->id)); // from mdl_congrea_sessions
-    $time = time();
-    $currentsql = "SELECT id, timestart, timeduration, userid from {event}"
-            . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time and (timestart + (timeduration)) > $time";
-            //echo $currentsql; exit;
-            // $currentsql = "SELECT id, timestart, timeduration, userid from {event}"
-            // . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time and (timestart + (timeduration*60)) > $time";
-    $currentdata = $DB->get_records_sql($currentsql);
-    //echo  '<pre>'; print_r($currentdata); exit;
-    $upcomingsql = "SELECT id, timestart, timeduration, userid from {event}"
+//usort($sessionlist->starttime, "compare_dates_scheduled_list");
+$time = time();
+$currentsql = "SELECT id, timestart, timeduration, userid from {event}"
+    . " where instance = $congrea->id and modulename = 'congrea' and timestart <= $time and (timestart + (timeduration)) > $time";
+$currentdata = $DB->get_records_sql($currentsql);
+//usort($currentdata->starttime, "compare_dates_scheduled_list");
+$upcomingsql = "SELECT id, timestart, timeduration, userid from {event}"
     . " where instance = $congrea->id and modulename = 'congrea' and timestart >= $time ORDER BY timestart ASC LIMIT 1";
-    $upcomingdata = $DB->get_records_sql($upcomingsql);
-    if(empty($currentdata) and empty($upcomingdata)) { // Todo.
-        $duration =  0;
-        $teacherid = 0;
-        $sessionstarttime = 0;
-        $sessionendtime = 0;        
-    }
-    if (!empty($currentdata)) {
-        $eventid = congrea_array_key_first($currentdata);
-        $sessionstarttime = $currentdata[$eventid]->timestart;
-        $duration =  $currentdata[$eventid]->timeduration;
-        $teacherid = $currentdata[$eventid]->userid;
+$upcomingdata = $DB->get_records_sql($upcomingsql);
+//usort($upcomingdata->starttime, "compare_dates_scheduled_list");
+if (empty($currentdata) and empty($upcomingdata)) { // Todo.
+    $duration =  0;
+    $teacherid = 0;
+    $sessionstarttime = 0;
+    $sessionendtime = 0;
+}
+if (!empty($currentdata)) {
+    $eventid = congrea_array_key_first($currentdata);
+    $sessionstarttime = $currentdata[$eventid]->timestart;
+    $duration =  $currentdata[$eventid]->timeduration;
+    $teacherid = $currentdata[$eventid]->userid;
+    $starttime = date("Y-m-d H:i:s", $sessionstarttime);
+    $endtime = date('Y-m-d H:i:s', strtotime("+$duration seconds", strtotime($starttime)));
+    $sessionendtime = strtotime($endtime);
+} else { // Todo.
+    if (!empty($upcomingdata)) {
+        $eventid = congrea_array_key_first($upcomingdata);
+        $sessionstarttime = $upcomingdata[$eventid]->timestart;
+        $duration =  $upcomingdata[$eventid]->timeduration;
+        $teacherid = $upcomingdata[$eventid]->userid;
         $starttime = date("Y-m-d H:i:s", $sessionstarttime);
         $endtime = date('Y-m-d H:i:s', strtotime("+$duration seconds", strtotime($starttime)));
-        $sessionendtime = strtotime($endtime);        
-    } else { // Todo.
-        if(!empty($upcomingdata)) {
-            $eventid = congrea_array_key_first($upcomingdata);
-            $sessionstarttime = $upcomingdata[$eventid]->timestart;
-            $duration =  $upcomingdata[$eventid]->timeduration;
-            $teacherid = $upcomingdata[$eventid]->userid;
-            $starttime = date("Y-m-d H:i:s", $sessionstarttime);
-            $endtime = date('Y-m-d H:i:s', strtotime("+$duration seconds", strtotime($starttime)));
-            $sessionendtime = strtotime($endtime);
-        }        
-
+        $sessionendtime = strtotime($endtime);
     }
+}
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 // Print the page header.
@@ -102,9 +100,9 @@ $room = !empty($course->id) && !empty($cm->id) ? $course->id . '_' . $cm->id : 0
 echo '<link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/ijhofagnokdeoghaohcekchijfeffbjl">';
 // Event log.
 $event = \mod_congrea\event\course_module_viewed::create(array(
-            'objectid' => $congrea->id,
-            'context' => $context,
-        ));
+    'objectid' => $congrea->id,
+    'context' => $context,
+));
 $event->add_record_snapshot('course_modules', $cm);
 $event->add_record_snapshot('course', $course);
 $event->add_record_snapshot('congrea', $congrea);
@@ -125,7 +123,9 @@ if ($delete and confirm_sesskey()) {
         echo $OUTPUT->heading($strdelete . " " . $congrea->name);
         $optionsyes = array('delete' => $delete, 'confirm' => md5($delete), 'sesskey' => sesskey());
         echo $OUTPUT->confirm(
-                get_string('deleterecordingfile', 'mod_congrea', $recname), new moodle_url($returnurl, $optionsyes), $returnurl
+            get_string('deleterecordingfile', 'mod_congrea', $recname),
+            new moodle_url($returnurl, $optionsyes),
+            $returnurl
         );
         echo $OUTPUT->footer();
         die;
@@ -168,7 +168,7 @@ $role = 's'; // Default role.
 
 if (get_config('mod_congrea', 'allowoverride')) { // If override on.
     if (
-            has_capability('mod/congrea:addinstance', $context) && ($USER->id == $teacherid)
+        has_capability('mod/congrea:addinstance', $context) && ($USER->id == $teacherid)
     ) {
         if ($congrea->enablerecording) { // From individual setting.
             $recordingstatus = true;
@@ -184,7 +184,7 @@ if (get_config('mod_congrea', 'allowoverride')) { // If override on.
     }
 } else { // If override off.
     if (
-            has_capability('mod/congrea:addinstance', $context) && ($USER->id == $teacherid)
+        has_capability('mod/congrea:addinstance', $context) && ($USER->id == $teacherid)
     ) {
         if (get_config('mod_congrea', 'enablerecording')) {
             $recordingstatus = true;
@@ -193,8 +193,8 @@ if (get_config('mod_congrea', 'allowoverride')) { // If override on.
         }
     } else {
         if (
-                get_config('mod_congrea', 'attendeerecording') &&
-                get_config('mod_congrea', 'enablerecording')
+            get_config('mod_congrea', 'attendeerecording') &&
+            get_config('mod_congrea', 'enablerecording')
         ) { // For student.
             $recordingstatus = true;
         } else {
@@ -233,14 +233,14 @@ if (($sessionstarttime > time() && $sessionstarttime <= time())) {
     $classname .= ' online';
 }
 if (!$psession) {
-    if(!empty($sessionstarttime) and !empty($sessionendtime) and !empty($teacherid)) {
-    echo html_writer::start_tag('div', array('class' => $classname));
-    echo html_writer::tag('div', get_string('congreatiming', 'mod_congrea', $a));
-    echo html_writer::tag('div', get_string('teachername', 'mod_congrea', $user));
+    if (!empty($sessionstarttime) and !empty($sessionendtime) and !empty($teacherid)) {
+        echo html_writer::start_tag('div', array('class' => $classname));
+        echo html_writer::tag('div', get_string('congreatiming', 'mod_congrea', $a));
+        echo html_writer::tag('div', get_string('teachername', 'mod_congrea', $user));
     } else { // Sessions are past.
-    echo html_writer::start_tag('div', array('class' => $classname));
-    echo html_writer::tag('div', get_string('notsession', 'mod_congrea'));
-    echo html_writer::tag('div', '');
+        echo html_writer::start_tag('div', array('class' => $classname));
+        echo html_writer::tag('div', get_string('notsession', 'mod_congrea'));
+        echo html_writer::tag('div', '');
     }
 }
 // Conditions to show the intro can change to look for own settings or whatever.
@@ -344,21 +344,21 @@ if (get_config('mod_congrea', 'allowoverride')) { // If override on.
 }
 
 $variableobject = (object) array(
-            'allowoverride' => $allowoverride,
-            'studentaudio' => $studentaudio,
-            'studentvideo' => $studentvideo,
-            'studentpc' => $studentpc,
-            'studentgc' => $studentgc,
-            'raisehand' => $raisehand,
-            'userlist' => $userlist,
-            'enablerecording' => $enablerecording,
-            'recallowpresentoravcontrol' => $recallowpresentoravcontrol,
-            'showpresentorrecordingstatus' => $showpresentorrecordingstatus,
-            'recattendeeav' => $recattendeeav,
-            'recallowattendeeavcontrol' => $recallowattendeeavcontrol,
-            'showattendeerecordingstatus' => $showattendeerecordingstatus,
-            'trimrecordings' => $trimrecordings,
-            'attendeerecording' => $attendeerecording, 'x6' => 0
+    'allowoverride' => $allowoverride,
+    'studentaudio' => $studentaudio,
+    'studentvideo' => $studentvideo,
+    'studentpc' => $studentpc,
+    'studentgc' => $studentgc,
+    'raisehand' => $raisehand,
+    'userlist' => $userlist,
+    'enablerecording' => $enablerecording,
+    'recallowpresentoravcontrol' => $recallowpresentoravcontrol,
+    'showpresentorrecordingstatus' => $showpresentorrecordingstatus,
+    'recattendeeav' => $recattendeeav,
+    'recallowattendeeavcontrol' => $recallowattendeeavcontrol,
+    'showattendeerecordingstatus' => $showattendeerecordingstatus,
+    'trimrecordings' => $trimrecordings,
+    'attendeerecording' => $attendeerecording, 'x6' => 0
 );
 $hexcode = settingstohex($variableobject); // Todo- for validation.
 if ($psession) {
@@ -374,9 +374,25 @@ if ($sessionendtime > time() && $sessionstarttime <= time()) {
         $sendmurl = str_replace("http://", "https://", $CFG->wwwroot);
     }
     $form = congrea_online_server(
-            $url, $authusername, $authpassword, $role, $rid, $room,
-            $upload, $down, $info, $cgcolor, $webapi, $userpicturesrc,
-            $fromcms, $licensekey, $audiostatus, $videostatus, $recordingstatus, $hexcode, $joinbutton
+        $url,
+        $authusername,
+        $authpassword,
+        $role,
+        $rid,
+        $room,
+        $upload,
+        $down,
+        $info,
+        $cgcolor,
+        $webapi,
+        $userpicturesrc,
+        $fromcms,
+        $licensekey,
+        $audiostatus,
+        $videostatus,
+        $recordingstatus,
+        $hexcode,
+        $joinbutton
     );
     echo $form;
 } else {
@@ -386,8 +402,10 @@ if ($sessionendtime > time() && $sessionstarttime <= time()) {
 }
 // Upload congrea recording.
 $postdata = json_encode(array('room' => $room));
+//sort($sessionlist->endtime);
+//usort($sessionlist, "compare_dates_scheduled_list");
 if ($psession) {
-    // Recorded session.
+    // Recorded session
     echo html_writer::end_tag('div');
     echo html_writer::start_tag('div', array('class' => 'wrapper-record-list'));
     $result = curl_request("https://api.congrea.net/backend/recordings", $postdata, $key, $secret);
@@ -397,14 +415,14 @@ if ($psession) {
     }
     if (!empty($recording->Items) and !$session) {
         rsort($recording->Items);
-        echo $OUTPUT->heading('Recorded sessions');
+        echo $OUTPUT->heading(get_string('recordedsessions', 'mod_congrea'));
     } else if ($session) {
-        echo $OUTPUT->heading(get_string('sessionareport', 'mod_congrea'));
+        echo $OUTPUT->heading(get_string('sessionareport', 'mod_congrea')); // CHECK
     } else {
         echo $OUTPUT->heading('There are no recordings to show');
     }
     $table = new html_table();
-    $table->head = array('File name', 'Time created', 'Report', 'Action',''); // Recorded session header
+    $table->head = array('File name', 'Time created', 'Report', 'Action', ''); // Recorded session header
     $table->colclasses = array('centeralign', 'centeralign');
     $table->attributes['class'] = 'admintable generaltable';
     $table->id = "recorded_data";
@@ -416,55 +434,44 @@ if ($psession) {
         $row[] = $record->name . ' ' . mod_congrea_module_get_rename_action($cm, $record);
         $row[] = userdate($record->time / 1000); // Todo.
         $vcsid = $record->key_room; // Todo.
+        
         // Attendance button.
         if (has_capability('mod/congrea:attendance', $context)) {
             $imageurl = "$CFG->wwwroot/mod/congrea/pix/attendance.png";
             $attendancereport = html_writer::link(
-                            new moodle_url($returnurl, array('session' => $record->session, 'psession' => true)),
-                    html_writer::empty_tag('img', array(
-                                'src' => $imageurl,
-                                'alt' => 'Attendance Report', 'class' => 'attend'
-                            )), array('title' => 'View Attendance Report', 'target' => '_blank')
+                new moodle_url($returnurl, array('session' => $record->session, 'psession' => true)),
+                html_writer::empty_tag('img', array(
+                    'src' => $imageurl,
+                    'alt' => 'Attendance Report', 'class' => 'attend'
+                )),
+                array('title' => 'View Attendance Report', 'target' => '_blank')
             );
             $row[] = $attendancereport;
         }
-       
         if (has_capability('mod/congrea:playrecording', $context)) {
             $buttons[] = congrea_online_server_play(
-                $url,
-                $authusername,
-                $authpassword,
-                $role,
-                $rid,
-                $room,
-                $upload,
-                $down,
-                $info,
-                $cgcolor,
-                $webapi,
-                $userpicturesrc,
-                $licensekey,
-                $id,
-                $vcsid,
-                $record->session,
-                $recordingstatus,
-                $hexcode
-            );
+                $url, $authusername, $authpassword, $role, $rid, $room, $upload, $down, $info, $cgcolor, $webapi,
+                $userpicturesrc, $licensekey, $id, $vcsid, $record->session, $recordingstatus, $hexcode);
         }
+        /* foreach ($sessionlist as $list) {
+            if ($list->endtime < time()) {
+                $pastsessions[] = $list;
+            }
+         */
         // Delete button.
         if (has_capability('mod/congrea:recordingdelete', $context)) {
             $imageurl = "$CFG->wwwroot/mod/congrea/pix/delete.png";
             $buttons[] = html_writer::link(new moodle_url($returnurl, array(
-                        'delete' => $record->session,
-                        'recname' => $record->name, 'sesskey' => sesskey()
-                            )), html_writer::empty_tag('img', array(
-                                'src' => $imageurl,
-                                'alt' => $strdelete, 'class' => 'iconsmall'
-                            )), array('title' => $strdelete));
+                'delete' => $record->session,
+                'recname' => $record->name, 'sesskey' => sesskey()
+            )), html_writer::empty_tag('img', array(
+                'src' => $imageurl,
+                'alt' => $strdelete, 'class' => 'iconsmall'
+            )), array('title' => $strdelete));
         }
         $row[] = implode(' ', $buttons);
         $row[] = $lastcolumn;
-        if (!has_capability('mod/congrea:attendance', $context)) { // Report for student.
+        if (!has_capability('mod/congrea:attendance', $context)) { // Report view for student.
             $table->head = array('Filename', 'Time created', 'Action', "Attendance");
             $table->attributes['class'] = 'admintable generaltable studentEnd';
             $apiurl = 'https://api.congrea.net/data/analytics/attendance';
@@ -486,11 +493,11 @@ if ($session) {
     $table->colclasses = array('centeralign', 'centeralign');
     $table->attributes['class'] = 'admintable generaltable attendance';
     $apiurl = 'https://api.congrea.net/t/analytics/attendance';
-    $data = attendence_curl_request($apiurl, $session, $key, $authpassword, $authusername, $room); // TODO.
+    $data = attendence_curl_request($apiurl, $session, $key, $authpassword, $authusername, $room); // TODO. //error
     $attendencestatus = json_decode($data);
     $sessionstatus = get_total_session_time($attendencestatus->attendance); // Session time.
     $enrolusers = congrea_get_enrolled_users($id, $COURSE->id);
-    if (!empty($attendencestatus) and ! empty($sessionstatus)) {
+    if (!empty($attendencestatus) and !empty($sessionstatus)) {
         foreach ($attendencestatus->attendance as $sattendence) {
             if (!empty($sattendence->connect) || !empty($sattendence->disconnect)) { // TODO for isset and uid.
                 $attendence[] = $sattendence->uid; // Collect present user id for calculate absent user.
@@ -503,8 +510,10 @@ if ($session) {
                 $connect = json_decode($sattendence->connect);
                 $disconnect = json_decode($sattendence->disconnect);
                 $studentsstatus = calctime($connect, $disconnect, $sessionstatus->sessionstarttime, $sessionstatus->sessionendtime); // get total time spent
-                if (!empty($studentsstatus->totalspenttime) 
-                    and $sessionstatus->totalsessiontime >= $studentsstatus->totalspenttime) {
+                if (
+                    !empty($studentsstatus->totalspenttime)
+                    and $sessionstatus->totalsessiontime >= $studentsstatus->totalspenttime
+                ) {
                     $presence = ($studentsstatus->totalspenttime * 100) / $sessionstatus->totalsessiontime;
                 } else if ($studentsstatus->totalspenttime > $sessionstatus->totalsessiontime) {
                     $presence = 100; // Special case handle.
@@ -514,39 +523,48 @@ if ($session) {
             }
             $apiurl2 = 'https://api.congrea.net/t/analytics/attendancerecording';
             $recdata = attendence_curl_request($apiurl2, $session, $key, $authpassword, $authusername, $room); // TODO.
+            foreach ($sessionlist as $list) {
+                if ($list->endtime < time() && !$recordingstatus) {
+                    $sessions[] = $list;
+                }
+            }
             $recordingattendance = json_decode($recdata, true);
             if (!empty(recording_view($sattendence->uid, $recordingattendance))) {
                 $recview = recording_view($sattendence->uid, $recordingattendance);
-                if($recview->totalviewd < 60) {
+                if ($recview->totalviewd < 60) {
                     $totalseconds = $recview->recodingtime;
-                    $rectotalviewedpercent = round(($recview->totalviewd*100)/$totalseconds); 
-                    $recviewed = $recview->totalviewd.' '.'Secs';
+                    $rectotalviewedpercent = round(($recview->totalviewd * 100) / $totalseconds);
+                    $recviewed = $recview->totalviewd . ' ' . 'Secs';
                 } else {
-                    $recviewed = round($recview->totalviewd/60).' Mins';
+                    $recviewed = round($recview->totalviewd / 60) . ' Mins';
                     $rectotalviewedpercent = $recview->totalviewedpercent;
                 }
             } else {
                 $rectotalviewedpercent = 0;
                 $recviewed = '-';
             }
-            if (has_capability('mod/congrea:addinstance', $context) && ($studentname->id == $teacherid)){
+            if (has_capability('mod/congrea:addinstance', $context) && ($studentname->id == $teacherid)) {
                 if (!empty($studentsstatus->totalspenttime)) {
                     $table->data[] = array(
-                        '<strong>' . $username . '</strong', $studentsstatus->totalspenttime . ' ' . 'Mins', date('y-m-d h:i:s', $studentsstatus->starttime), date('y-m-d h:i:s', $studentsstatus->endtime), $recviewed);
+                        '<strong>' . $username . '</strong', $studentsstatus->totalspenttime . ' ' . 'Mins', date('y-m-d h:i:s', $studentsstatus->starttime), date('y-m-d h:i:s', $studentsstatus->endtime), $recviewed
+                    );
                 } else {
                     $table->data[] = array(
                         '<strong>' . $username . '</strong', '<p style="color:red;"><b>A\A</b></p>', date('y-m-d h:i:s', $studentsstatus->starttime),
-                        date('y-m-d h:i:s', $studentsstatus->endtime), $recviewed);
-                }   
+                        date('y-m-d h:i:s', $studentsstatus->endtime), $recviewed
+                    );
+                }
             } else {
                 if (!empty($studentsstatus->totalspenttime)) {
                     $table->data[] = array(
                         $username, $studentsstatus->totalspenttime . ' ' . 'Mins', date('y-m-d h:i:s', $studentsstatus->starttime),
-                        date('y-m-d h:i:s', $studentsstatus->endtime), $recviewed);
-                } else{
+                        date('y-m-d h:i:s', $studentsstatus->endtime), $recviewed
+                    );
+                } else {
                     $table->data[] = array(
                         $username,  '<p style="color:red;"><b>A</b></p>', date('y-m-d h:i:s', $studentsstatus->starttime),
-                        date('y-m-d h:i:s', $studentsstatus->endtime), $recviewed);
+                        date('y-m-d h:i:s', $studentsstatus->endtime), $recviewed
+                    );
                 }
             }
         }
@@ -565,22 +583,20 @@ if ($session) {
                 }
                 if (!empty(recording_view($data,  $recordingattendance))) {
                     $recview = recording_view($data, $recordingattendance);
-                    if($recview->totalviewd < 60) {
+                    if ($recview->totalviewd < 60) {
                         $totalseconds = $recview->recodingtime;
-                        $rectotalviewedpercent = round(($recview->totalviewd*100)/$totalseconds); 
-                        $recviewed = $recview->totalviewd.' '.'Secs';
+                        $rectotalviewedpercent = round(($recview->totalviewd * 100) / $totalseconds);
+                        $recviewed = $recview->totalviewd . ' ' . 'Secs';
                     } else {
-                        $recviewed = round($recview->totalviewd/60).' Mins';
+                        $recviewed = round($recview->totalviewd / 60) . ' Mins';
                         $rectotalviewedpercent = $recview->totalviewedpercent;
-                    } 
+                    }
                 } else {
                     $rectotalviewedpercent = 0;
                     $recviewed = '-';
                 }
                 if (has_capability('mod/congrea:addinstance', $context) && ($studentname->id == $teacherid)) {
-
                     $table->data[] = array('<strong>' . $username . '</strong>', '<p style="color:red;"><b>A</b></p>', '-', '-', $recviewed);
-
                 } else {
                     $table->data[] = array($username, '<p style="color:red;"><b>A</b></p>', '-', '-', $recviewed);
                 }
@@ -592,20 +608,18 @@ if ($session) {
         echo get_string('absentsessionuser', 'mod_congrea');
     }
 }
-
 if (!empty($table->data) and !$session) {
     echo html_writer::start_tag('div', array('class' => 'no-overflow'));
     echo html_writer::table($table);
     echo html_writer::end_tag('div');
 }
-
 if (!empty($table) and $session and $sessionstatus) {
     echo html_writer::start_tag('div', array('class' => 'no-overflow'));
     $countenroluser = count($enrolusers);
     $presentnroluser = count($attendence);
     $upsentuser = $countenroluser - $presentnroluser;
     $present = '<b> Session duration: </b>' . $sessionstatus->totalsessiontime . ' ' .
-    'Mins' . '</br>' . '<b> Students absent: </b>' . $upsentuser . '</br>' . '<b> Students present: </b>' . $presentnroluser. '</br></br>';
+        'Mins' . '</br>' . '<b> Students absent: </b>' . $upsentuser . '</br>' . '<b> Students present: </b>' . $presentnroluser . '</br></br>';
     echo html_writer::tag('div', $present, array('class' => 'present'));
     echo html_writer::table($table);
     echo html_writer::end_tag('div');
@@ -617,13 +631,11 @@ if (!$psession) {
 }
 if ($upcomingsession || $upcomingsession == 0 and !$psession) { // Upcoming sessions.
     congrea_print_dropdown_form($cm->id, $drodowndisplaymode);
-    if ($drodowndisplaymode == 1 || $drodowndisplaymode == 0 and ! $psession) { // Get 7 session.
+    if ($drodowndisplaymode == 1 || $drodowndisplaymode == 0 and !$psession) { // Get 7 session.
         congrea_get_records($congrea, 7);
-    } else if ($drodowndisplaymode == 2) {
-        // For 30 days.
+    } else if ($drodowndisplaymode == 2) { // For 30 days.
         congrea_get_records($congrea, 30);
-    } else if ($drodowndisplaymode == 3) {
-        // For 90 days.
+    } else if ($drodowndisplaymode == 3) { // For 90 days.
         congrea_get_records($congrea, 90);
     }
 }
