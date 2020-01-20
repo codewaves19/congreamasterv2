@@ -523,11 +523,6 @@ if ($session) {
             }
             $apiurl2 = 'https://api.congrea.net/t/analytics/attendancerecording';
             $recdata = attendence_curl_request($apiurl2, $session, $key, $authpassword, $authusername, $room); // TODO.
-            foreach ($sessionlist as $list) {
-                if ($list->endtime < time() && !$recordingstatus) {
-                    $sessions[] = $list;
-                }
-            }
             $recordingattendance = json_decode($recdata, true);
             if (!empty(recording_view($sattendence->uid, $recordingattendance))) {
                 $recview = recording_view($sattendence->uid, $recordingattendance);
@@ -617,9 +612,9 @@ if (!empty($table) and $session and $sessionstatus) {
     echo html_writer::start_tag('div', array('class' => 'no-overflow'));
     $countenroluser = count($enrolusers);
     $presentnroluser = count($attendence);
-    $upsentuser = $countenroluser - $presentnroluser;
-    $present = '<b> Session duration: </b>' . $sessionstatus->totalsessiontime . ' ' .
-        'Mins' . '</br>' . '<b> Students absent: </b>' . $upsentuser . '</br>' . '<b> Students present: </b>' . $presentnroluser . '</br></br>';
+    $absentuser = $countenroluser - $presentnroluser;
+    $present = '<strong>Session: </strong>'.date('D, y-m-d H:i', $sessionstatus->sessionstarttime). ' to ' . date('H:i', $sessionstatus->sessionendtime). '</br><b> Session duration: </b>' . $sessionstatus->totalsessiontime . ' ' .
+        'Mins' . '</br>' . '<b> Students absent: </b>' . $absentuser . '</br>' . '<b> Students present: </b>' . $presentnroluser . '</br></br>';
     echo html_writer::tag('div', $present, array('class' => 'present'));
     echo html_writer::table($table);
     echo html_writer::end_tag('div');

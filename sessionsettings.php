@@ -188,9 +188,20 @@ $currenttime = time();
 if (!empty($sessionlist)) {
     foreach ($sessionlist as $list) {
         $buttons = array();
-        $row = array();
+        $row = array();       
         $row[] = userdate($list->starttime);
-        
+        if (($list->endtime < $currenttime) && empty($list->repeattype)){ //past sessions
+            //$row->attributes['class'] = 'pastsessions';            }
+            continue;
+        }
+        if (!empty($list->repeattype)) {
+            $days = 7 * ($list->repeattype - 1);
+            $date = date('Y-m-d H:i:s', $list->endtime);
+            $past = date('Y-m-d  H:i:s', strtotime($date . '+' . $days . ' days'));
+            if (strtotime($past) < $currenttime) {
+                continue;
+            }
+        }
         $row[] = $list->timeduration . ' ' . 'Minutes';
         $teachername = $DB->get_record('user', array('id' => $list->teacherid));
         if (!empty($teachername)) {
@@ -223,12 +234,12 @@ if (!empty($sessionlist)) {
             array('class' => 'actionlink exportpage')
         );
         $row[] = implode(' ', $buttons);
-        if ($list->endtime < $currenttime) { //past sessions
-            $table->data[] = $row->attributes['bgcolor'] = 'red'; // Choose a name for the CSS class.
-            //$row[] = $list->timeduration . ' ' . 'Minutes'. ' (Past session)';
-        } else{
-            $table->data[] = $row;
-        }
+        //if ($list->endtime < $currenttime) { //past sessions
+            //$row->attributes['id'] = 'pastsessions';  
+            //$table->data[] = $row;   
+        //}else{
+            $table->data[] = $row;   
+        //}    
     }
     if (!empty($table->data)) {
         echo html_writer::start_tag('div', array('class' => 'no-overflow'));

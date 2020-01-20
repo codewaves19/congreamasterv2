@@ -155,4 +155,7 @@ body#page-mod-congrea-sessionsettings .generaltable th.header.c5,
 #page-mod-congrea-view .wrapper-record-list table.generaltable.attendance td.cell.c2 {
     width: auto;
 }
+#page-mod-congrea-sessionsettings #page-wrapper table.generaltable tbody tr.pastsessions {
+    color:lightgrey;
+}
 
