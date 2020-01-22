@@ -73,18 +73,17 @@ class mod_congrea_session_form extends moodleform {
         $mform->addElement('select', 'moderatorid', get_string('selectteacher', 'congrea'), $teacheroptions);
         $mform->addHelpButton('moderatorid', 'selectteacher', 'congrea');
         // Repeat.
-        $mform->addElement('header', 'headeraddmultiplesessions', get_string('addmultiplesessions', 'congrea'));
+        //$mform->addElement('header', 'headeraddmultiplesessions', get_string('addmultiplesessions', 'congrea'));
         $mform->addElement('checkbox', 'addmultiply', '', get_string('repeatsessions', 'congrea'));
         $mform->addHelpButton('addmultiply', 'repeatsessions', 'congrea');
-        $period = array(1 => 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-            21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36);
+        $period = array(1 => 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
         $periodgroup = array();
         $periodgroup[] = $mform->createElement('select', 'period', '', $period, false, true);
         $periodgroup[] = $mform->createElement('static', 'perioddesc', '', get_string('week', 'congrea'));
         $mform->addGroup($periodgroup, 'periodgroup', get_string('repeatevery', 'congrea'), array(' '), false);
-        $mform->disabledIf('periodgroup', 'addmultiply', 'notchecked');
-        $days = array();
+        $mform->hideIf('periodgroup', 'addmultiply', 'notchecked');
+        /* $days = array();
         $days[] = $mform->createElement('checkbox', 'Sun', '', get_string('sunday', 'calendar'));
         $days[] = $mform->createElement('checkbox', 'Mon', '', get_string('monday', 'calendar'));
         $days[] = $mform->createElement('checkbox', 'Tue', '', get_string('tuesday', 'calendar'));
@@ -93,7 +92,7 @@ class mod_congrea_session_form extends moodleform {
         $days[] = $mform->createElement('checkbox', 'Fri', '', get_string('friday', 'calendar'));
         $days[] = $mform->createElement('checkbox', 'Sat', '', get_string('saturday', 'calendar'));
         $mform->addGroup($days, 'days', get_string('repeaton', 'congrea'), array('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'), true);
-        $mform->disabledIf('days', 'addmultiply', 'notchecked');
+        $mform->disabledIf('days', 'addmultiply', 'notchecked'); */
         $this->add_action_buttons();
     }
 
@@ -107,9 +106,9 @@ class mod_congrea_session_form extends moodleform {
     public function validation($data, $files) {
         global $DB;
         $errors = parent::validation($data, $files);
-        if (!empty($data['period']) && $data['period'] > 0 && empty($data['days'])) {
+        /* if (!empty($data['period']) && $data['period'] > 0 && empty($data['days'])) {
             $errors['days'] = get_string('selectdays', 'congrea');
-        }
+        } */
         $currentdate = time();
         $previousday = strtotime(date('Y-m-d H:i:s', strtotime("-24 hours", $currentdate)));
         if ($data['fromsessiondate'] < $previousday) {
@@ -130,16 +129,15 @@ class mod_congrea_session_form extends moodleform {
         }
         $starttime = date("Y-m-d H:i:s", $data['fromsessiondate']);
         $endtime = strtotime(date('Y-m-d H:i:s', strtotime("+$durationinminutes minutes", strtotime($starttime))));
-        if (!empty($data['days'])) {
+        /* if (!empty($data['days'])) {
             $prefix = $daylist = '';
             foreach ($data['days'] as $keys => $daysname) {
                 $daylist .= $prefix . '"' . $keys . '"';
                 $prefix = ', ';
             }
             $additional = $daylist;
-        } else {
-            $additional = 0;
-        }
+        } else {*/
+       // } 
         if(!empty($data['period'])) {
             $repeat = $data['period'];
         } else {

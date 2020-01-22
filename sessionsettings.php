@@ -75,19 +75,21 @@ if ($delete) {
         echo $OUTPUT->footer();
         die;
     } else if (data_submitted()) {
-        //$DB->delete_records('congrea_sessions', array('id' => $delete)); // MD:
+        $DB->delete_records('congrea_sessions', array('id' => $delete)); // MD:
         $DB->delete_records('event', array('modulename' => 'congrea', 'eventtype' => $delete));
         //$DB->delete_records('event', array('id' => $delete, 'repeatid' => $delete, 'modulename' => 'congrea'));
     }
 }
 
 $mform = new mod_congrea_session_form(null, array('id' => $id, 'sessionsettings' => $sessionsettings, 'edit' => $edit, 'action' => $action, 'congreaid' => $congrea->id));
+//$fromform = $mform->get_data();
 if ($mform->is_cancelled()) {
     // Do nothing.
     redirect(new moodle_url('/mod/congrea/sessionsettings.php', array('id' => $cm->id, 'sessionsettings' => true)));
 } else if ($fromform = $mform->get_data()) {
     $data = new stdClass();
     $data->starttime = $fromform->fromsessiondate;
+    
     $durationinminutes = round($fromform->timeduration / 60);
     $expecteddate = strtotime(date('Y-m-d H:i:s', strtotime("+$durationinminutes minutes", $data->starttime)));
     $data->endtime = $expecteddate;
@@ -96,20 +98,26 @@ if ($mform->is_cancelled()) {
     if (!empty($fromform->addmultiply)) {
         $data->isrepeat = $fromform->addmultiply; // MD: $data->multiple = $fromform->addmultiply;
         $data->repeattype = $fromform->period; // MD: $data->repeatid = $fromform->period;
-        if (!empty($fromform->days)) {
+        /* if (!empty($fromform->days)) {
             $prefix = $daylist = '';
             foreach ($fromform->days as $keys => $daysname) {
                 $daylist .= $prefix . '"' . $keys . '"';
                 $prefix = ', ';
-            }
-/*             if (!empty($fromform->days)) {
+            } */
+        /*             if (!empty($fromform->days)) {
                 $daysnames = implode(", ", array_keys($fromform->days));
                 $event->description = $until . ' weekly: ' . $daysnames;
             } */
-            $data->additional = str_replace('"', '', $daylist); // MD:
-        } else {
-            $data->additional = '-'; // MD:
-        }
+        //$data->additional = str_replace('"', '', $daylist); // MD:
+
+        //} else {
+        // $startdate = date('Y-m-d', strtotime($fromform->fromsessiondate));
+        //$additional = date('D', $startdate);
+        //$d2 = date('D', 1579933800);
+        $startdate = date('Y-m-d', $data->starttime);
+        $additional = date('D', strtotime($startdate));
+        $data->additional = $additional; // MD:
+        //}
     } else { // Single Event.
         /* $until = false;
         $event->description = 'Single session';
@@ -150,7 +158,7 @@ if ($mform->is_cancelled()) {
                 'Y-m-d H:i:s',
                 strtotime(date('Y-m-d H:i:s', $fromform->fromsessiondate) . "+$fromform->period weeks")
             );
-            $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $expecteddate, $data->additional); // MD:
+            $datelist = reapeat_date_list(date('Y-m-d H:i:s', $fromform->fromsessiondate), $expecteddate, $additional); // MD:
             $fromdate = date('Y-m-d H:i:s', $fromform->fromsessiondate);
             array_unshift($datelist, $fromdate); // // From start to repeat.
             foreach ($datelist as $startdate) {
@@ -159,7 +167,7 @@ if ($mform->is_cancelled()) {
         }
     }
     redirect($returnurl);
-}
+} // Else if end
 // Output starts here.
 echo $OUTPUT->header();
 echo $OUTPUT->heading($congrea->name);
@@ -191,10 +199,9 @@ if (!empty($sessionlist)) {
         $row = array();       
         $row[] = userdate($list->starttime);
         if (($list->endtime < $currenttime) && empty($list->repeattype)){ //past sessions
-            //$row->attributes['class'] = 'pastsessions';            }
             continue;
         }
-        if (!empty($list->repeattype)) {
+        if (!empty($list->repeattype)) { // Repeated past sessions
             $days = 7 * ($list->repeattype - 1);
             $date = date('Y-m-d H:i:s', $list->endtime);
             $past = date('Y-m-d  H:i:s', strtotime($date . '+' . $days . ' days'));
@@ -250,10 +257,10 @@ if (!empty($sessionlist)) {
         echo 'no session';
     }
 } else {
-    echo $OUTPUT->notification(get_string('nosession', 'mod_congrea'));
-    if($action == "addsession"){
+    echo $OUTPUT->notification(get_string('nosession', 'mod_congrea'));  // add session notification
+/*     if($action == "addsession"){
         echo $OUTPUT->notification(get_string('newsessionadded', 'mod_congrea'));
-    }
+    } */
 }
 if ($edit) {
     $list = $DB->get_records('congrea_sessions', array('id' => $edit)); // congrea sessions table MD:
@@ -289,6 +296,5 @@ if ($edit || $action == 'addsession') {
         $mform->display();
     }
 }
-
 // Finish the page.
 echo $OUTPUT->footer();

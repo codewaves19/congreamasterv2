@@ -489,7 +489,7 @@ if ($psession) {
 // Student Report according to session.
 if ($session) {
     $table = new html_table();
-    $table->head = array('Name', 'Presence/Attendance', 'Join time', 'Exit time', 'Recording viewed');
+    $table->head = array('Name', 'Attendance', 'Join time', 'Exit time', 'Recording viewed');
     $table->colclasses = array('centeralign', 'centeralign');
     $table->attributes['class'] = 'admintable generaltable attendance';
     $apiurl = 'https://api.congrea.net/t/analytics/attendance';
@@ -541,24 +541,24 @@ if ($session) {
             if (has_capability('mod/congrea:addinstance', $context) && ($studentname->id == $teacherid)) {
                 if (!empty($studentsstatus->totalspenttime)) {
                     $table->data[] = array(
-                        '<strong>' . $username . '</strong', $studentsstatus->totalspenttime . ' ' . 'Mins', date('y-m-d h:i:s', $studentsstatus->starttime), date('y-m-d h:i:s', $studentsstatus->endtime), $recviewed
+                        '<strong>' . $username . '</strong', $studentsstatus->totalspenttime . ' ' . 'Mins', date('g:i A ', $studentsstatus->starttime), date('g:i A', $studentsstatus->endtime), $recviewed
                     );
                 } else {
                     $table->data[] = array(
-                        '<strong>' . $username . '</strong', '<p style="color:red;"><b>A\A</b></p>', date('y-m-d h:i:s', $studentsstatus->starttime),
-                        date('y-m-d h:i:s', $studentsstatus->endtime), $recviewed
+                        '<strong>' . $username . '</strong', '<p style="color:red;"><b>A\A</b></p>', date('g:i A', $studentsstatus->starttime),
+                        date('g:i A', $studentsstatus->endtime), $recviewed
                     );
                 }
             } else {
                 if (!empty($studentsstatus->totalspenttime)) {
                     $table->data[] = array(
-                        $username, $studentsstatus->totalspenttime . ' ' . 'Mins', date('y-m-d h:i:s', $studentsstatus->starttime),
-                        date('y-m-d h:i:s', $studentsstatus->endtime), $recviewed
+                        $username, $studentsstatus->totalspenttime . ' ' . 'Mins', date('g:i A', $studentsstatus->starttime),
+                        date('g:i A', $studentsstatus->endtime), $recviewed
                     );
                 } else {
                     $table->data[] = array(
-                        $username,  '<p style="color:red;"><b>A</b></p>', date('y-m-d h:i:s', $studentsstatus->starttime),
-                        date('y-m-d h:i:s', $studentsstatus->endtime), $recviewed
+                        $username,  '<p style="color:red;"><b>A</b></p>', date('g:i A', $studentsstatus->starttime),
+                        date('g:i A', $studentsstatus->endtime), $recviewed
                     );
                 }
             }
@@ -613,8 +613,10 @@ if (!empty($table) and $session and $sessionstatus) {
     $countenroluser = count($enrolusers);
     $presentnroluser = count($attendence);
     $absentuser = $countenroluser - $presentnroluser;
-    $present = '<strong>Session: </strong>'.date('D, y-m-d H:i', $sessionstatus->sessionstarttime). ' to ' . date('H:i', $sessionstatus->sessionendtime). '</br><b> Session duration: </b>' . $sessionstatus->totalsessiontime . ' ' .
-        'Mins' . '</br>' . '<b> Students absent: </b>' . $absentuser . '</br>' . '<b> Students present: </b>' . $presentnroluser . '</br></br>';
+    if ($studentname->id == $teacherid) {
+        $teachername = $username;
+    }
+    $present = '<h5><strong>'.date('D, F j, Y, g:i a', $sessionstatus->sessionstarttime). ' to ' . date('g:i a', $sessionstatus->sessionendtime). '</strong></h5><b>Teacher: '. $teachername . '</b></br><b> Session duration: </b>' . $sessionstatus->totalsessiontime . ' ' . 'Mins' . '</br>' . '<b> Students absent: </b>' . $absentuser . '</br>' . '<b> Students present: </b>' . $presentnroluser . '</br></br>';
     echo html_writer::tag('div', $present, array('class' => 'present'));
     echo html_writer::table($table);
     echo html_writer::end_tag('div');
