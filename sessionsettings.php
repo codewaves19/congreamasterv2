@@ -257,10 +257,15 @@ if (!empty($sessionlist)) {
         echo 'no session';
     }
 } else {
-    echo $OUTPUT->notification(get_string('nosession', 'mod_congrea'));  // add session notification
-/*     if($action == "addsession"){
+   /*  if ($action == "addsession"){
         echo $OUTPUT->notification(get_string('newsessionadded', 'mod_congrea'));
-    } */
+    } else if ($edit) {
+        echo $OUTPUT->notification(get_string('sessionedited', 'mod_congrea')); 
+    } else if ($delete) {
+        echo $OUTPUT->notification(get_string('sessiondeleted', 'mod_congrea'));
+    } else { */
+        echo $OUTPUT->notification(get_string('nosession', 'mod_congrea'));  // add session notification
+    //}
 }
 if ($edit) {
     $list = $DB->get_records('congrea_sessions', array('id' => $edit)); // congrea sessions table MD:

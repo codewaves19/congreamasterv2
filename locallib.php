@@ -27,6 +27,7 @@
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/calendar/lib.php');
 
+//define('NO_DAYS', 0);
 define('SEVEN_DAYS', 1);
 define('THIRTY_DAYS', 2);
 define('THREE_MONTH', 3);
@@ -860,6 +861,7 @@ function week_between_two_dates($date1, $date2)
 function congrea_get_dropdown()
 {
     return array(
+        //NO_DAYS => get_string('nosessions', 'congrea'),
         SEVEN_DAYS => get_string('7days', 'congrea'),
         THIRTY_DAYS => get_string('30days', 'congrea'),
         THREE_MONTH => get_string('3month', 'congrea')
@@ -903,9 +905,11 @@ function congrea_get_records($congrea, $type)
     $timestart = time(); //current time
     $sql = "SELECT * FROM {event} where modulename = 'congrea' and instance = $congrea->id  and timestart >= $timestart ORDER BY timestart ASC LIMIT $type"; // To do.
     $sessionlist = $DB->get_records_sql($sql);
+    if($type == 1) {
+        return $sessionlist;
+    }
     if (!empty($sessionlist)) {
         foreach ($sessionlist as $list) {
-            //echo $list->userid; exit;
             $row = array();
             $row[] = userdate($list->timestart);
             $row[] = round($list->timeduration / 60) . ' ' . 'Minutes';
@@ -924,6 +928,7 @@ function congrea_get_records($congrea, $type)
             echo html_writer::end_tag('div');
         }
     } else {
+        
         echo $OUTPUT->notification(get_string('noupcomingsession', 'congrea'));
     }
 }

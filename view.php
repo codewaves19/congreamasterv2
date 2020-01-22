@@ -40,7 +40,6 @@ $sessionsettings = optional_param('sessionsettings', 0, PARAM_INT);
 $drodowndisplaymode = optional_param('drodowndisplaymode', 0, PARAM_INT);
 if ($id) {
     $cm = get_coursemodule_from_id('congrea', $id, 0, false, MUST_EXIST);
-    //echo '<pre>'; print_r($cm); exit;
     $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
     $congrea = $DB->get_record('congrea', array('id' => $cm->instance), '*', MUST_EXIST);
 } else if ($n) {
@@ -417,7 +416,7 @@ if ($psession) {
         rsort($recording->Items);
         echo $OUTPUT->heading(get_string('recordedsessions', 'mod_congrea'));
     } else if ($session) {
-        echo $OUTPUT->heading(get_string('sessionareport', 'mod_congrea')); // CHECK
+        echo $OUTPUT->heading(get_string('sessionareport', 'mod_congrea'));
     } else {
         echo $OUTPUT->heading('There are no recordings to show');
     }
@@ -495,8 +494,10 @@ if ($session) {
     $apiurl = 'https://api.congrea.net/t/analytics/attendance';
     $data = attendence_curl_request($apiurl, $session, $key, $authpassword, $authusername, $room); // TODO. //error
     $attendencestatus = json_decode($data);
+
     $sessionstatus = get_total_session_time($attendencestatus->attendance); // Session time.
-    $enrolusers = congrea_get_enrolled_users($id, $COURSE->id);
+    $enrolusers = congrea_get_enrolled_users($id, $COURSE->id); // Enrolled users
+    
     if (!empty($attendencestatus) and !empty($sessionstatus)) {
         foreach ($attendencestatus->attendance as $sattendence) {
             if (!empty($sattendence->connect) || !empty($sattendence->disconnect)) { // TODO for isset and uid.
@@ -616,7 +617,7 @@ if (!empty($table) and $session and $sessionstatus) {
     if ($studentname->id == $teacherid) {
         $teachername = $username;
     }
-    $present = '<h5><strong>'.date('D, F j, Y, g:i a', $sessionstatus->sessionstarttime). ' to ' . date('g:i a', $sessionstatus->sessionendtime). '</strong></h5><b>Teacher: '. $teachername . '</b></br><b> Session duration: </b>' . $sessionstatus->totalsessiontime . ' ' . 'Mins' . '</br>' . '<b> Students absent: </b>' . $absentuser . '</br>' . '<b> Students present: </b>' . $presentnroluser . '</br></br>';
+    $present = '<h5><strong>'.date('D, d-M-Y, g:i A', $sessionstatus->sessionstarttime). ' to ' . date('g:i A', $sessionstatus->sessionendtime). '</strong></h5><strong>Teacher: '. $teachername . '</strong></br><strong> Session duration: </strong>' . $sessionstatus->totalsessiontime . ' ' . 'Mins' . '</br>' . '<strong> Students absent: </strong>' . $absentuser . '</br>' . '<strong> Students present: </strong>' . $presentnroluser . '</br></br>';
     echo html_writer::tag('div', $present, array('class' => 'present'));
     echo html_writer::table($table);
     echo html_writer::end_tag('div');
@@ -627,13 +628,20 @@ if (!$psession) {
     echo '</br>';
 }
 if ($upcomingsession || $upcomingsession == 0 and !$psession) { // Upcoming sessions.
-    congrea_print_dropdown_form($cm->id, $drodowndisplaymode);
+
+    
+    if(!empty(congrea_get_records($congrea, 1))){
+        congrea_print_dropdown_form($cm->id, $drodowndisplaymode);
+    }
+
+    
+
     if ($drodowndisplaymode == 1 || $drodowndisplaymode == 0 and !$psession) { // Get 7 session.
         congrea_get_records($congrea, 7);
     } else if ($drodowndisplaymode == 2) { // For 30 days.
         congrea_get_records($congrea, 30);
     } else if ($drodowndisplaymode == 3) { // For 90 days.
         congrea_get_records($congrea, 90);
-    }
+    } 
 }
 echo $OUTPUT->footer();
